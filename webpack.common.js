@@ -42,18 +42,13 @@ module.exports = {
         generator: {
           filename: 'assets/fonts/[hash][ext][query]'
         }
-      },
-      {
-        test: /\.(html|mustache)$/,
-        exclude: /node_modules/,
-        type: 'asset/source'
       }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      title: 'tp1',
+      title: 'project',
       favicon: path.resolve(__dirname, './src/img/favicon.ico'),
     }),
     new CleanWebpackPlugin(),

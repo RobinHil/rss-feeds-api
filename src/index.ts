@@ -1,5 +1,4 @@
 import { App } from './scripts/app'
-import './stylesheets/styles.scss'
 
 function start()
 {
