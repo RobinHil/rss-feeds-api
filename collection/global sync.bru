@@ -1,0 +1,11 @@
+meta {
+  name: global sync
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{request}}://{{host}}:{{port}}/api/system/sync
+  body: none
+  auth: none
+}

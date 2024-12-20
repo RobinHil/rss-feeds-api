@@ -1,0 +1,11 @@
+meta {
+  name: get articles by feed
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{request}}://{{host}}:{{port}}/api/feeds/1/articles
+  body: none
+  auth: inherit
+}
