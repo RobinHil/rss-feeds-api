@@ -9,6 +9,9 @@ import { createRssFeedRouter } from './routes/rssFeedRoutes';
 import { createArticleRouter } from './routes/articleRoutes';
 import { createAuthRouter } from './routes/authRoutes';
 import { createSystemRouter } from './routes/systemRoutes';
+import { createSearchRouter } from './routes/searchRoutes';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 export class Server {
     private app: express.Application;
@@ -26,8 +29,20 @@ export class Server {
     private configureMiddleware() {
         this.app.use(express.json());
         
-        // Appliquer la vérification de l'API key à toutes les routes
-        this.app.use(validateApiKey);
+        // Swagger UI d'abord, avant tout middleware d'authentification
+        this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+            explorer: true,
+            customSiteTitle: "RSS Feed API Documentation"
+        }));
+
+        // Puis les middlewares d'authentification pour toutes les autres routes /api
+        this.app.use('/api', (req, res, next) => {
+            // Exclure explicitement la route de documentation
+            if (req.path.startsWith('/docs')) {
+                return next();
+            }
+            validateApiKey(req, res, next);
+        });
     }
 
     private configureRoutes() {
@@ -43,6 +58,7 @@ export class Server {
         this.app.use('/api/users', authMiddleware, createUserRouter(this.dbContext));
         this.app.use('/api/feeds', authMiddleware, createRssFeedRouter(this.dbContext));
         this.app.use('/api', authMiddleware, createArticleRouter(this.dbContext));
+        this.app.use('/api/search', authMiddleware, createSearchRouter(this.dbContext));
         
         this.app.use(errorHandler);
     }

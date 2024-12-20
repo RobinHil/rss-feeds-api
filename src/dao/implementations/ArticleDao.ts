@@ -1,6 +1,7 @@
 import { Database } from 'sqlite';
 import { Article } from '../../models/Article';
 import { IArticleDao } from '../interfaces/IArticleDao';
+import { normalizeSearchTerm } from '../../utils/searchHelpers';
 
 export class ArticleDao implements IArticleDao {
     private db: Database;
@@ -266,6 +267,60 @@ export class ArticleDao implements IArticleDao {
         }
 
         const result = await this.db.get<{ count: number }>(query, params);
+        return result?.count || 0;
+    }
+
+    async search(
+        term: string,
+        userId: number,
+        limit: number = 10,
+        offset: number = 0
+    ): Promise<Article[]> {
+        const normalizedTerm = normalizeSearchTerm(term);
+        return await this.db.all<Article[]>(`
+            SELECT DISTINCT a.* 
+            FROM articles a
+            JOIN rss_feeds f ON a.feed_id = f.id
+            WHERE (
+                LOWER(REPLACE(a.title, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(a.description, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(a.content, ' ', '')) LIKE ?
+                OR LOWER(REPLACE(a.author, ' ', '')) LIKE ?
+            )
+            AND f.user_id = ?
+            ORDER BY a.pub_date DESC
+            LIMIT ? OFFSET ?
+        `, [
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            userId,
+            limit,
+            offset
+        ]);
+    }
+
+    async countSearch(term: string, userId: number): Promise<number> {
+        const normalizedTerm = normalizeSearchTerm(term);
+        const result = await this.db.get<{ count: number }>(`
+            SELECT COUNT(DISTINCT a.link) as count 
+            FROM articles a
+            JOIN rss_feeds f ON a.feed_id = f.id
+            WHERE (
+                LOWER(REPLACE(a.title, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(a.description, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(a.content, ' ', '')) LIKE ?
+                OR LOWER(REPLACE(a.author, ' ', '')) LIKE ?
+            )
+            AND f.user_id = ?
+        `, [
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            userId
+        ]);
         return result?.count || 0;
     }
 }

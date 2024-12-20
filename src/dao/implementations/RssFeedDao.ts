@@ -1,6 +1,7 @@
 import { Database } from 'sqlite';
 import { RssFeed } from '../../models/RssFeed';
 import { IRssFeedDao } from '../interfaces/IRssFeedDao';
+import { normalizeSearchTerm } from '../../utils/searchHelpers';
 
 export class RssFeedDao implements IRssFeedDao {
     private db: Database;
@@ -85,6 +86,53 @@ export class RssFeedDao implements IRssFeedDao {
             'SELECT COUNT(*) as count FROM rss_feeds WHERE user_id = ?',
             userId
         );
+        return result?.count || 0;
+    }
+
+    async search(
+        term: string,
+        userId: number,
+        limit: number = 10,
+        offset: number = 0
+    ): Promise<RssFeed[]> {
+        const normalizedTerm = normalizeSearchTerm(term);
+        return await this.db.all<RssFeed[]>(`
+            SELECT * FROM rss_feeds 
+            WHERE (
+                LOWER(REPLACE(title, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(description, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(category, ' ', '')) LIKE ?
+            )
+            AND user_id = ?
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        `, [
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            userId,
+            limit,
+            offset
+        ]);
+    }
+
+    async countSearch(term: string, userId: number): Promise<number> {
+        const normalizedTerm = normalizeSearchTerm(term);
+        const result = await this.db.get<{ count: number }>(`
+            SELECT COUNT(*) as count 
+            FROM rss_feeds 
+            WHERE (
+                LOWER(REPLACE(title, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(description, ' ', '')) LIKE ? 
+                OR LOWER(REPLACE(category, ' ', '')) LIKE ?
+            )
+            AND user_id = ?
+        `, [
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            `%${normalizedTerm}%`,
+            userId
+        ]);
         return result?.count || 0;
     }
 }
