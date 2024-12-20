@@ -1,0 +1,20 @@
+meta {
+  name: update feed
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{request}}://{{host}}:{{port}}/api/feeds/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "L'echo",
+    "url": "https://lechodedora.lemonde/ppleutre.xml",
+    "description": "La description de lechodedora.",
+    "category": "Loisir"
+  }
+}

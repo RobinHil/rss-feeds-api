@@ -133,3 +133,9 @@ dist
 doc/
 docs/
 documentation/
+
+# Database objects
+*.sqlite
+
+# Temporary files & directories
+*tmp

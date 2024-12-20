@@ -1,0 +1,11 @@
+meta {
+  name: get all favorites
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{request}}://{{host}}:{{port}}/api/favorites
+  body: none
+  auth: inherit
+}

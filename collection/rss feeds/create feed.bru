@@ -1,0 +1,21 @@
+meta {
+  name: create feed
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{request}}://{{host}}:{{port}}/api/feeds
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Le monde",
+    "url": "https://lemondededora.lemonde/dmelf/dmdkf.xml",
+    "description": "La description du mondededora.",
+    "category": "Sport",
+    "user_id": 1
+  }
+}

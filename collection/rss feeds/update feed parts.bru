@@ -1,0 +1,18 @@
+meta {
+  name: update feed parts
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{request}}://{{host}}:{{port}}/api/feeds/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "url": "https://ledemon.lemonde/ptre.xml",
+    "category": "Public"
+  }
+}

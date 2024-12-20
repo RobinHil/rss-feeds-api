@@ -1,0 +1,17 @@
+meta {
+  name: create favorite
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{request}}://{{host}}:{{port}}/api/favorites
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "feed_id": 1
+  }
+}
