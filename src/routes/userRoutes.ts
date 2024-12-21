@@ -4,6 +4,72 @@ import { ValidationError, NotFoundError, ConflictError, DatabaseError, Unauthori
 import { validateRequest } from '../middleware/validators';
 import bcrypt from 'bcrypt';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management endpoints
+ *
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: User ID
+ *         username:
+ *           type: string
+ *           description: User's username
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: Account creation timestamp
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ *     UpdateUserInput:
+ *       type: object
+ *       properties:
+ *         username:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 50
+ *           pattern: ^[a-zA-Z0-9_-]+$
+ *           description: New username
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: New email address
+ *         password:
+ *           type: string
+ *           format: password
+ *           minLength: 6
+ *           description: New password
+ *     PaginatedUsersResponse:
+ *       type: object
+ *       properties:
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/User'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ */
 export function createUserRouter(dbContext: DatabaseContext) {
     const router = Router();
 
@@ -26,7 +92,43 @@ export function createUserRouter(dbContext: DatabaseContext) {
         }
     };
 
-    // GET /users
+    /**
+     * @swagger
+     * /users:
+     *   get:
+     *     summary: Get all users with pagination
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 1
+     *         description: Page number
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           maximum: 50
+     *           default: 10
+     *         description: Number of items per page
+     *     responses:
+     *       200:
+     *         description: List of users successfully retrieved
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/PaginatedUsersResponse'
+     *       401:
+     *         description: Unauthorized access
+     *       500:
+     *         description: Server error
+     */
     router.get('/', async (req, res, next) => {
         try {
             const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -53,7 +155,29 @@ export function createUserRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /users/me
+    /**
+     * @swagger
+     * /users/me:
+     *   get:
+     *     summary: Get current user's profile
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Current user's profile
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: User not found
+     *       500:
+     *         description: Server error
+     */
     router.get('/me', async (req, res, next) => {
         try {
             const user = await dbContext.users.findById(req.user!.id);
@@ -68,7 +192,38 @@ export function createUserRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /users/:id
+    /**
+     * @swagger
+     * /users/{id}:
+     *   get:
+     *     summary: Get user by ID
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: User ID
+     *     responses:
+     *       200:
+     *         description: User profile
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid user ID format
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: User not found
+     *       500:
+     *         description: Server error
+     */
     router.get('/:id', async (req, res, next) => {
         try {
             const userId = Number(req.params.id);
@@ -88,7 +243,42 @@ export function createUserRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // PUT /users/me
+    /**
+     * @swagger
+     * /users/me:
+     *   put:
+     *     summary: Update current user's profile
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/UpdateUserInput'
+     *     responses:
+     *       200:
+     *         description: User profile updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: User not found
+     *       409:
+     *         description: Username or email already exists
+     *       500:
+     *         description: Server error
+     */
     router.put('/me', validateRequest(updateUserSchema), async (req, res, next) => {
         try {
             const { username, email, password } = req.body;
@@ -133,7 +323,30 @@ export function createUserRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // DELETE /users/me
+    /**
+     * @swagger
+     * /users/me:
+     *   delete:
+     *     summary: Delete current user's account
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     responses:
+     *       200:
+     *         description: User account deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       401:
+     *         description: Unauthorized access
+     *       500:
+     *         description: Server error
+     */
     router.delete('/me', async (req, res, next) => {
         try {
             const userId = req.user!.id;

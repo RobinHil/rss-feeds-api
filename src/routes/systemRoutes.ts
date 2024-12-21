@@ -4,11 +4,81 @@ import { RssService } from '../services/RssService';
 import { validateSystemApiKey } from '../middleware/systemAuth';
 import { DatabaseError } from '../errors/types';
 
+/**
+ * @swagger
+ * tags:
+ *   name: System
+ *   description: System-level operations
+ *
+ * components:
+ *   schemas:
+ *     SyncResult:
+ *       type: object
+ *       properties:
+ *         feedId:
+ *           type: integer
+ *         url:
+ *           type: string
+ *           format: uri
+ *         articlesCount:
+ *           type: integer
+ *         status:
+ *           type: string
+ *           enum: [success, error]
+ *         error:
+ *           type: string
+ *     GlobalSyncResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             totalFeeds:
+ *               type: integer
+ *             successfulSyncs:
+ *               type: integer
+ *             failedSyncs:
+ *               type: integer
+ *             newArticles:
+ *               type: integer
+ *             results:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SyncResult'
+ *             startTime:
+ *               type: string
+ *               format: date-time
+ *             endTime:
+ *               type: string
+ *               format: date-time
+ */
 export function createSystemRouter(dbContext: DatabaseContext) {
     const router = Router();
     const rssService = new RssService(dbContext);
 
-    // POST /system/sync
+    /**
+     * @swagger
+     * /system/sync:
+     *   post:
+     *     summary: Synchronize all RSS feeds
+     *     description: System-level operation to synchronize all RSS feeds and fetch their latest articles
+     *     tags: [System]
+     *     security:
+     *       - ApiKeyAuth: []
+     *     responses:
+     *       200:
+     *         description: Global synchronization completed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/GlobalSyncResponse'
+     *       401:
+     *         description: Invalid API key
+     *       500:
+     *         description: Server error during synchronization
+     */
     router.post('/sync', validateSystemApiKey, async (req, res, next) => {
         try {
             console.log('Starting global RSS feed synchronization...');

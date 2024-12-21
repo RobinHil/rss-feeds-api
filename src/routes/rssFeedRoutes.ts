@@ -9,6 +9,98 @@ import {
 } from '../errors/types';
 import { validateRequest } from '../middleware/validators';
 
+/**
+ * @swagger
+ * tags:
+ *   name: RSS Feeds
+ *   description: RSS feed management endpoints
+ *
+ * components:
+ *   schemas:
+ *     RssFeed:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Feed ID
+ *         title:
+ *           type: string
+ *           description: Feed title
+ *         url:
+ *           type: string
+ *           format: uri
+ *           description: Feed URL
+ *         description:
+ *           type: string
+ *           description: Feed description
+ *         category:
+ *           type: string
+ *           description: Feed category
+ *         last_fetched:
+ *           type: string
+ *           format: date-time
+ *           description: Last synchronization timestamp
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *         user_id:
+ *           type: integer
+ *           description: Owner's user ID
+ *     CreateFeedInput:
+ *       type: object
+ *       required:
+ *         - title
+ *         - url
+ *       properties:
+ *         title:
+ *           type: string
+ *           maxLength: 255
+ *         url:
+ *           type: string
+ *           format: uri
+ *         description:
+ *           type: string
+ *           maxLength: 1000
+ *         category:
+ *           type: string
+ *           maxLength: 100
+ *     UpdateFeedInput:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *           maxLength: 255
+ *         url:
+ *           type: string
+ *           format: uri
+ *         description:
+ *           type: string
+ *           maxLength: 1000
+ *         category:
+ *           type: string
+ *           maxLength: 100
+ *     PaginatedFeedsResponse:
+ *       type: object
+ *       properties:
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/RssFeed'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ */
 export function createRssFeedRouter(dbContext: DatabaseContext) {
     const router = Router();
 
@@ -57,7 +149,46 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     };
 
-    // GET /feeds
+    /**
+     * @swagger
+     * /feeds:
+     *   get:
+     *     summary: Get all RSS feeds with pagination
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 1
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           maximum: 50
+     *           default: 10
+     *       - in: query
+     *         name: category
+     *         schema:
+     *           type: string
+     *         description: Filter feeds by category
+     *     responses:
+     *       200:
+     *         description: List of RSS feeds successfully retrieved
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/PaginatedFeedsResponse'
+     *       401:
+     *         description: Unauthorized access
+     *       500:
+     *         description: Server error
+     */
     router.get('/', async (req, res, next) => {
         try {
             const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -84,7 +215,48 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /feeds/user/:userId
+    /**
+     * @swagger
+     * /feeds/user/{userId}:
+     *   get:
+     *     summary: Get RSS feeds for a specific user
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: userId
+     *         required: true
+     *         schema:
+     *           type: integer
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 1
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           maximum: 50
+     *           default: 10
+     *     responses:
+     *       200:
+     *         description: User's RSS feeds successfully retrieved
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/PaginatedFeedsResponse'
+     *       400:
+     *         description: Invalid user ID format
+     *       401:
+     *         description: Unauthorized access
+     *       500:
+     *         description: Server error
+     */
     router.get('/user/:userId', async (req, res, next) => {
         try {
             const userId = Number(req.params.userId);
@@ -113,7 +285,35 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /feeds/:id
+    /**
+     * @swagger
+     * /feeds/{id}:
+     *   get:
+     *     summary: Get RSS feed by ID
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *     responses:
+     *       200:
+     *         description: RSS feed details
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/RssFeed'
+     *       400:
+     *         description: Invalid feed ID format
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     */
     router.get('/:id', async (req, res, next) => {
         try {
             const feedId = Number(req.params.id);
@@ -132,7 +332,40 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // POST /feeds
+    /**
+     * @swagger
+     * /feeds:
+     *   post:
+     *     summary: Create a new RSS feed
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/CreateFeedInput'
+     *     responses:
+     *       201:
+     *         description: RSS feed created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   $ref: '#/components/schemas/RssFeed'
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Unauthorized access
+     *       409:
+     *         description: Feed URL already exists
+     */
     router.post('/', validateRequest(createFeedSchema), async (req, res, next) => {
         try {
             const { title, url, description, category } = req.body;
@@ -169,7 +402,46 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // PUT /feeds/:id
+    /**
+     * @swagger
+     * /feeds/{id}:
+     *   put:
+     *     summary: Update an RSS feed completely
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/UpdateFeedInput'
+     *     responses:
+     *       200:
+     *         description: RSS feed updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     *       409:
+     *         description: Feed URL already exists
+     */
     router.put('/:id', validateRequest(updateFeedSchema), async (req, res, next) => {
         try {
             const feedId = Number(req.params.id);
@@ -223,7 +495,46 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // PATCH /feeds/:id
+    /**
+     * @swagger
+     * /feeds/{id}:
+     *   patch:
+     *     summary: Partially update an RSS feed
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/UpdateFeedInput'
+     *     responses:
+     *       200:
+     *         description: RSS feed partially updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     *       409:
+     *         description: Feed URL already exists
+     */
     router.patch('/:id', validateRequest(updateFeedSchema), async (req, res, next) => {
         try {
             const feedId = Number(req.params.id);
@@ -275,7 +586,38 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // DELETE /feeds/:id
+    /**
+     * @swagger
+     * /feeds/{id}:
+     *   delete:
+     *     summary: Delete an RSS feed
+     *     tags: [RSS Feeds]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *     responses:
+     *       200:
+     *         description: RSS feed deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *       400:
+     *         description: Invalid feed ID format
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     */
     router.delete('/:id', async (req, res, next) => {
         try {
             const feedId = Number(req.params.id);

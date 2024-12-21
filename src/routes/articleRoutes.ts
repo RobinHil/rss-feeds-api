@@ -10,6 +10,71 @@ import {
 import { validateRequest } from '../middleware/validators';
 import { isValidUrl, isValidISODate } from '../middleware/validators';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Articles
+ *   description: RSS feed articles management endpoints
+ *
+ * components:
+ *   schemas:
+ *     Article:
+ *       type: object
+ *       properties:
+ *         link:
+ *           type: string
+ *           format: uri
+ *           description: Article's unique URL
+ *         feed_id:
+ *           type: integer
+ *           description: ID of the associated RSS feed
+ *         title:
+ *           type: string
+ *           description: Article title
+ *         description:
+ *           type: string
+ *           description: Article description or excerpt
+ *         pub_date:
+ *           type: string
+ *           format: date-time
+ *           description: Publication date
+ *         author:
+ *           type: string
+ *           description: Article author
+ *         content:
+ *           type: string
+ *           description: Full article content
+ *         guid:
+ *           type: string
+ *           description: Article's globally unique identifier
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *     SyncFeedInput:
+ *       type: object
+ *       properties:
+ *         forceSync:
+ *           type: boolean
+ *           description: Force synchronization regardless of last sync time
+ *     PaginatedArticlesResponse:
+ *       type: object
+ *       properties:
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Article'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ */
 export function createArticleRouter(dbContext: DatabaseContext) {
     const router = Router();
     const rssService = new RssService(dbContext);
@@ -59,7 +124,64 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         }
     };
 
-    // GET /feeds/:feedId/articles
+    /**
+     * @swagger
+     * /feeds/{feedId}/articles:
+     *   get:
+     *     summary: Get articles from a specific RSS feed
+     *     tags: [Articles]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: feedId
+     *         required: true
+     *         schema:
+     *           type: integer
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 1
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           maximum: 50
+     *           default: 10
+     *       - in: query
+     *         name: startDate
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *       - in: query
+     *         name: endDate
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *       - in: query
+     *         name: q
+     *         schema:
+     *           type: string
+     *           minLength: 2
+     *         description: Search query
+     *     responses:
+     *       200:
+     *         description: List of articles successfully retrieved
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/PaginatedArticlesResponse'
+     *       400:
+     *         description: Invalid parameters
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     */
     router.get('/feeds/:feedId/articles', async (req, res, next) => {
         try {
             // Validation de l'ID du flux
@@ -164,7 +286,53 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // POST /feeds/:feedId/sync
+    /**
+     * @swagger
+     * /feeds/{feedId}/sync:
+     *   post:
+     *     summary: Synchronize articles from an RSS feed
+     *     tags: [Articles]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: feedId
+     *         required: true
+     *         schema:
+     *           type: integer
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/SyncFeedInput'
+     *     responses:
+     *       200:
+     *         description: Feed synchronized successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     articlesCount:
+     *                       type: integer
+     *                     feedId:
+     *                       type: integer
+     *                     lastSyncDate:
+     *                       type: string
+     *                       format: date-time
+     *       400:
+     *         description: Invalid feed ID or recent synchronization
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Feed not found
+     */
     router.post('/feeds/:feedId/sync', validateRequest(syncFeedSchema), async (req, res, next) => {
         try {
             const feedId = Number(req.params.feedId);
@@ -226,7 +394,47 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /articles/:link
+    /**
+     * @swagger
+     * /articles/{link}:
+     *   get:
+     *     summary: Get article by its link
+     *     tags: [Articles]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: link
+     *         required: true
+     *         schema:
+     *           type: string
+     *           format: uri
+     *         description: Article's URL (encoded)
+     *     responses:
+     *       200:
+     *         description: Article details
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 data:
+     *                   $ref: '#/components/schemas/Article'
+     *                 feed:
+     *                   type: object
+     *                   properties:
+     *                     id:
+     *                       type: integer
+     *                     title:
+     *                       type: string
+     *       400:
+     *         description: Invalid article URL
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: Article not found
+     */
     router.get('/articles/:link', async (req, res, next) => {
         try {
             const link = decodeURIComponent(req.params.link);
@@ -270,7 +478,77 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         }
     });
 
-    // GET /articles
+    /**
+     * @swagger
+     * /articles:
+     *   get:
+     *     summary: Get all articles from user's feeds
+     *     tags: [Articles]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 1
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           maximum: 50
+     *           default: 10
+     *       - in: query
+     *         name: feedId
+     *         schema:
+     *           type: integer
+     *       - in: query
+     *         name: startDate
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *       - in: query
+     *         name: endDate
+     *         schema:
+     *           type: string
+     *           format: date-time
+     *       - in: query
+     *         name: q
+     *         schema:
+     *           type: string
+     *           minLength: 2
+     *         description: Search query
+     *     responses:
+     *       200:
+     *         description: List of articles with feed information
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/PaginatedArticlesResponse'
+     *                 - type: object
+     *                   properties:
+     *                     filters:
+     *                       type: object
+     *                       properties:
+     *                         feedId:
+     *                           type: integer
+     *                         startDate:
+     *                           type: string
+     *                           format: date-time
+     *                         endDate:
+     *                           type: string
+     *                           format: date-time
+     *                         query:
+     *                           type: string
+     *       400:
+     *         description: Invalid parameters
+     *       401:
+     *         description: Unauthorized access
+     */
     router.get('/articles', async (req, res, next) => {
         try {
             // Validation des paramètres de requête

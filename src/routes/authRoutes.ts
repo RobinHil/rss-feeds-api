@@ -5,6 +5,83 @@ import { validateRequest } from '../middleware/validators';
 import { ValidationError, UnauthorizedError, ConflictError } from '../errors/types';
 import bcrypt from 'bcrypt';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: User authentication and token management
+ *
+ * components:
+ *   schemas:
+ *     RegisterInput:
+ *       type: object
+ *       required:
+ *         - username
+ *         - email
+ *         - password
+ *       properties:
+ *         username:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 50
+ *           pattern: ^[a-zA-Z0-9_-]+$
+ *           description: User's unique username
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         password:
+ *           type: string
+ *           format: password
+ *           minLength: 6
+ *           description: User's password
+ *     LoginInput:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         password:
+ *           type: string
+ *           format: password
+ *           description: User's password
+ *     RefreshTokenInput:
+ *       type: object
+ *       required:
+ *         - refreshToken
+ *       properties:
+ *         refreshToken:
+ *           type: string
+ *           description: The refresh token previously issued
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Success message
+ *         data:
+ *           type: object
+ *           properties:
+ *             user:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 username:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *             accessToken:
+ *               type: string
+ *               description: JWT access token
+ *             refreshToken:
+ *               type: string
+ *               description: JWT refresh token
+ */
 export function createAuthRouter(dbContext: DatabaseContext, authService: AuthService) {
     const router = Router();
 
@@ -42,7 +119,34 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
         }
     };
 
-    // POST /auth/register
+    /**
+     * @swagger
+     * /auth/register:
+     *   post:
+     *     summary: Register a new user
+     *     tags: [Authentication]
+     *     security:
+     *       - ApiKeyAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/RegisterInput'
+     *     responses:
+     *       201:
+     *         description: User successfully registered
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/AuthResponse'
+     *       400:
+     *         description: Invalid input data
+     *       409:
+     *         description: Username or email already exists
+     *       500:
+     *         description: Server error
+     */
     router.post('/register', validateRequest(registerSchema), async (req, res, next) => {
         try {
             const { username, email, password } = req.body;
@@ -89,7 +193,34 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
         }
     });
 
-    // POST /auth/login
+    /**
+     * @swagger
+     * /auth/login:
+     *   post:
+     *     summary: Authenticate user and get tokens
+     *     tags: [Authentication]
+     *     security:
+     *       - ApiKeyAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/LoginInput'
+     *     responses:
+     *       200:
+     *         description: Successfully authenticated
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/AuthResponse'
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Invalid credentials
+     *       500:
+     *         description: Server error
+     */
     router.post('/login', validateRequest(loginSchema), async (req, res, next) => {
         try {
             const { email, password } = req.body;
@@ -118,7 +249,42 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
         }
     });
 
-    // POST /auth/refresh
+    /**
+     * @swagger
+     * /auth/refresh:
+     *   post:
+     *     summary: Get new access token using refresh token
+     *     tags: [Authentication]
+     *     security:
+     *       - ApiKeyAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/RefreshTokenInput'
+     *     responses:
+     *       200:
+     *         description: New access token generated
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     accessToken:
+     *                       type: string
+     *       400:
+     *         description: Invalid input
+     *       401:
+     *         description: Invalid or expired refresh token
+     *       500:
+     *         description: Server error
+     */
     router.post('/refresh', async (req, res, next) => {
         try {
             const { refreshToken } = req.body;
