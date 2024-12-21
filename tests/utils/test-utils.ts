@@ -22,14 +22,15 @@ export interface TestUser {
   birth_date: string;
 }
 
-export const createTestUser = async (): Promise<TestUser> => {
+export const createTestUser = async (overrides: Partial<TestUser> = {}): Promise<TestUser> => {
   const testUser = {
     username: 'testuser',
     email: 'test@example.com',
     password: await bcrypt.hash('password123', 10),
     first_name: 'Test',
     last_name: 'User',
-    birth_date: '1990-01-01'
+    birth_date: '1990-01-01',
+    ...overrides
   };
 
   const result = await global.testDb.run(
