@@ -186,7 +186,7 @@ Get tests JUnit report:
 npm run test:junit
 ```
 
-Get tests code coverage report:
+Run the test suite with code coverage report:
 
 ```bash
 npm run test:coverage
