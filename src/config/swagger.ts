@@ -6,12 +6,12 @@ const options = {
         info: {
             title: 'RSS Feed API',
             version: '1.0.0',
-            description: 'API pour gérer des flux RSS, articles et favoris',
+            description: 'API to manage RSS feeds, articles and favorites',
         },
         servers: [
             {
                 url: 'http://localhost:3000/api',
-                description: 'Serveur de développement',
+                description: 'Development server',
             },
         ],
         components: {
