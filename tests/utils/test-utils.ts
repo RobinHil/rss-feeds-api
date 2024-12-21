@@ -1,10 +1,14 @@
-// tests/utils/test-utils.ts
 import { Server } from '../../src/server';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { JWT_CONFIG } from '../../src/config/auth';
 import { API_KEY_CONFIG } from '../../src/config/apiKey';
 import bcrypt from 'bcrypt';
+import { Database } from 'sqlite';
+
+declare global {
+  var testDb: Database;
+}
 
 export const testApiKey = API_KEY_CONFIG.systemApiKey;
 

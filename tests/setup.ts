@@ -1,11 +1,9 @@
-// tests/setup.ts
 import { Database } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-// Variables globales pour les tests
 declare global {
   var testDb: Database;
 }
