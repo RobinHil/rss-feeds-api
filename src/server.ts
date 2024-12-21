@@ -1,5 +1,6 @@
 import express from 'express';
 import { Database } from 'sqlite';
+import { Server as HttpServer } from 'http';
 import { DatabaseContext, initializeDaos } from './config/database';
 import { errorHandler } from './errors/errorHandler';
 import { AuthService } from './services/AuthService';
@@ -17,6 +18,7 @@ export class Server {
     private app: express.Application;
     private dbContext: DatabaseContext;
     private authService: AuthService;
+    private server: HttpServer | null = null;
 
     constructor(db: Database) {
         this.app = express();
@@ -63,15 +65,31 @@ export class Server {
         this.app.use(errorHandler);
     }
 
-    public start(port: number) {
+    public start(port: number): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
-                this.app.listen(port, () => {
+                this.server = this.app.listen(port, () => {
                     console.log(`Server is running on http://localhost:${port}`);
                     resolve(true);
                 });
             } catch (error) {
                 reject(error);
+            }
+        });
+    }
+
+    public stop(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.server) {
+                this.server.close((err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
             }
         });
     }

@@ -323,4 +323,12 @@ export class ArticleDao implements IArticleDao {
         ]);
         return result?.count || 0;
     }
+
+    async deleteOldArticles(monthsOld: number): Promise<number> {
+        const result = await this.db.run(`
+            DELETE FROM articles 
+            WHERE pub_date < datetime('now', '-' || ? || ' months')
+        `, monthsOld);
+        return result.changes;
+    }
 }

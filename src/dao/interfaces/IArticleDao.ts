@@ -44,4 +44,5 @@ export interface IArticleDao {
             feedId?: number;
         }
     ): Promise<number>;
+    deleteOldArticles(monthsOld: number): Promise<number>;
 }

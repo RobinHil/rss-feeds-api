@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { DatabaseContext } from '../config/database';
 import { RssService } from '../services/RssService';
 import { validateSystemApiKey } from '../middleware/systemAuth';
-import { DatabaseError } from '../errors/types';
+import { ValidationError, DatabaseError } from '../errors/types';
 
 /**
  * @swagger
@@ -108,6 +108,83 @@ export function createSystemRouter(dbContext: DatabaseContext) {
         } catch (error) {
             console.error('Global sync failed:', error);
             next(new DatabaseError('Failed to perform global synchronization'));
+        }
+    });
+
+    /**
+     * @swagger
+     * /system/cleanup:
+     *   delete:
+     *     summary: Delete old articles
+     *     description: System-level operation to cleanup articles older than the specified number of months
+     *     tags: [System]
+     *     security:
+     *       - ApiKeyAuth: []
+     *     parameters:
+     *       - in: query
+     *         name: months
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *           default: 6
+     *         description: Number of months to keep (articles older than this will be deleted)
+     *     responses:
+     *       200:
+     *         description: Old articles deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     deletedCount:
+     *                       type: integer
+     *                     monthsOld:
+     *                       type: integer
+     *                     olderThan:
+     *                       type: string
+     *                       format: date-time
+     *       400:
+     *         description: Invalid months parameter
+     *       401:
+     *         description: Invalid API key
+     *       500:
+     *         description: Server error during cleanup
+     */
+    router.delete('/cleanup', validateSystemApiKey, async (req, res, next) => {
+        try {
+            const months = parseInt(req.query.months as string);
+            
+            // Validation du paramètre
+            if (isNaN(months) || months < 1) {
+                throw new ValidationError('months parameter must be a positive integer');
+            }
+
+            console.log(`Starting cleanup of articles older than ${months} months...`);
+            
+            const olderThan = new Date();
+            olderThan.setMonth(olderThan.getMonth() - months);
+
+            const deletedCount = await dbContext.articles.deleteOldArticles(months);
+            
+            console.log(`Cleanup completed: ${deletedCount} articles older than ${months} months deleted`);
+
+            res.json({
+                message: `Articles older than ${months} months deleted successfully`,
+                data: {
+                    deletedCount,
+                    monthsOld: months,
+                    olderThan: olderThan.toISOString()
+                }
+            });
+        } catch (error) {
+            console.error('Cleanup failed:', error);
+            next(error);
         }
     });
 
