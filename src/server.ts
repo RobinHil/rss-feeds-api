@@ -30,6 +30,21 @@ export class Server {
 
     private configureMiddleware() {
         this.app.use(express.json());
+
+        // Root routes - unprotected welcome message
+        const welcomeResponse = {
+            message: 'Welcome to the RSS Feed API!',
+            documentation: 'Access the API documentation at /api/docs',
+            version: '1.0.0'
+        };
+        
+        this.app.get('/', (req, res) => {
+            res.json(welcomeResponse);
+        });
+
+        this.app.get('/api', (req, res) => {
+            res.json(welcomeResponse);
+        });
         
         // Swagger UI d'abord, avant tout middleware d'authentification
         this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
