@@ -6,7 +6,8 @@
   "scripts": {
     "init-db": "ts-node src/database/testDb.ts",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "HILAIRE Robin",
