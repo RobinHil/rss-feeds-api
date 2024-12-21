@@ -1,0 +1,24 @@
+meta {
+  name: Sync All Feeds
+  type: http
+  seq: 1
+}
+
+post {{baseUrl}}/api/system/sync {
+  headers {
+    X-API-Key: {{apiKey}}
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+  test("should return sync results", () => {
+    const response = res.getBody();
+    expect(response.data.totalFeeds).toBeDefined();
+    expect(response.data.successfulSyncs).toBeDefined();
+    expect(response.data.failedSyncs).toBeDefined();
+    expect(response.data.newArticles).toBeDefined();
+  });
+}

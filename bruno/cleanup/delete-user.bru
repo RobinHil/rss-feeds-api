@@ -1,0 +1,18 @@
+meta {
+  name: Delete User Account
+  type: http
+  seq: 1
+}
+
+delete {{baseUrl}}/api/users {
+  headers {
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+}

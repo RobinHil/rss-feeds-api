@@ -1,0 +1,27 @@
+meta {
+  name: Get RSS Feeds
+  type: http
+  seq: 2
+}
+
+get {{baseUrl}}/api/feeds {
+  headers {
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+  query {
+    page: 1
+    limit: 10
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+  test("should return paginated data", () => {
+    const response = res.getBody();
+    expect(response.pagination).toBeDefined();
+    expect(Array.isArray(response.data)).toBe(true);
+  });
+}

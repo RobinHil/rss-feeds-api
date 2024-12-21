@@ -1,0 +1,22 @@
+meta {
+  name: Get Feed Articles
+  type: http
+  seq: 2
+}
+
+get {{baseUrl}}/api/feeds/{{feedId}}/articles {
+  headers {
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+  query {
+    page: 1
+    limit: 10
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+}

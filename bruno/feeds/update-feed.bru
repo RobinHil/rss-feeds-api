@@ -1,0 +1,25 @@
+meta {
+  name: Update Feed
+  type: http
+  seq: 4
+}
+
+put {{baseUrl}}/api/feeds/{{feedId}} {
+  headers {
+    Content-Type: application/json
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+  body {
+    {
+      "title": "Updated Feed Title",
+      "description": "Updated feed description"
+    }
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+}

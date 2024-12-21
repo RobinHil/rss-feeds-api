@@ -1,0 +1,32 @@
+meta {
+  name: Create RSS Feed
+  type: http
+  seq: 1
+}
+
+post {{baseUrl}}/api/feeds {
+  headers {
+    Content-Type: application/json
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+  body {
+    {
+      "title": "Test Feed",
+      "url": "https://www.lemonde.fr/justice/rss_full.xml",
+      "description": "Test feed description",
+      "category": "Technology"
+    }
+  }
+}
+
+tests {
+  const response = res.getBody();
+  test("status should be 201", () => {
+    expect(res.getStatus()).toBe(201);
+  });
+  test("should return feed data", () => {
+    expect(response.data.id).toBeDefined();
+  });
+  bru.setVar("feedId", response.data.id);
+}

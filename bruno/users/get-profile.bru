@@ -1,0 +1,23 @@
+meta {
+  name: Get User Profile
+  type: http
+  seq: 1
+}
+
+get {{baseUrl}}/api/users {
+  headers {
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+  test("should return user data", () => {
+    const user = res.getBody();
+    expect(user.email).toBe(bru.getVar("email"));
+    expect(user.username).toBe(bru.getVar("username"));
+  });
+}

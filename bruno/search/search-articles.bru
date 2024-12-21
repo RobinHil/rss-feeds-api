@@ -1,0 +1,23 @@
+meta {
+  name: Search Articles
+  type: http
+  seq: 2
+}
+
+get {{baseUrl}}/api/search/articles {
+  headers {
+    X-API-Key: {{apiKey}}
+    Authorization: Bearer {{accessToken}}
+  }
+  query {
+    q: "Test"
+    page: 1
+    limit: 10
+  }
+}
+
+tests {
+  test("status should be 200", () => {
+    expect(res.getStatus()).toBe(200);
+  });
+}
