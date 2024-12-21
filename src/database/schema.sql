@@ -4,6 +4,10 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    birth_date DATE NOT NULL,
+    description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -48,7 +52,7 @@ CREATE TABLE IF NOT EXISTS articles (
     FOREIGN KEY (feed_id) REFERENCES rss_feeds(id) ON DELETE CASCADE
 );
 
--- Index pour améliorer les performances
+-- Index
 CREATE INDEX IF NOT EXISTS idx_rss_feeds_user_id ON rss_feeds(user_id);
 CREATE INDEX IF NOT EXISTS idx_rss_feeds_url_user ON rss_feeds(url, user_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_user_feed ON favorites(user_id, feed_id);

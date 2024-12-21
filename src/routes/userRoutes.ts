@@ -25,6 +25,20 @@ import bcrypt from 'bcrypt';
  *           type: string
  *           format: email
  *           description: User's email address
+ *         first_name:
+ *           type: string
+ *           description: User's first name
+ *         last_name:
+ *           type: string
+ *           description: User's last name
+ *         birth_date:
+ *           type: string
+ *           format: date
+ *           description: User's birth date (YYYY-MM-DD)
+ *         description:
+ *           type: string
+ *           description: User's profile description
+ *           maxLength: 1000
  *         created_at:
  *           type: string
  *           format: date-time
@@ -51,6 +65,27 @@ import bcrypt from 'bcrypt';
  *           format: password
  *           minLength: 6
  *           description: New password
+ *         first_name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 50
+ *           pattern: ^[a-zA-ZÀ-ÿ\s-]+$
+ *           description: New first name
+ *         last_name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 50
+ *           pattern: ^[a-zA-ZÀ-ÿ\s-]+$
+ *           description: New last name
+ *         birth_date:
+ *           type: string
+ *           format: date
+ *           pattern: ^\d{4}-\d{2}-\d{2}$
+ *           description: New birth date (YYYY-MM-DD)
+ *         description:
+ *           type: string
+ *           maxLength: 1000
+ *           description: New profile description
  *     PaginatedUsersResponse:
  *       type: object
  *       properties:
@@ -89,6 +124,26 @@ export function createUserRouter(dbContext: DatabaseContext) {
             type: 'string',
             minLength: 6,
             maxLength: 100
+        },
+        first_name: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 50,
+            pattern: /^[a-zA-ZÀ-ÿ\s-]+$/
+        },
+        last_name: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 50,
+            pattern: /^[a-zA-ZÀ-ÿ\s-]+$/
+        },
+        birth_date: {
+            type: 'string',
+            pattern: /^\d{4}-\d{2}-\d{2}$/
+        },
+        description: {
+            type: 'string',
+            maxLength: 1000
         }
     };
 
@@ -268,6 +323,8 @@ export function createUserRouter(dbContext: DatabaseContext) {
      *               properties:
      *                 message:
      *                   type: string
+     *                 data:
+     *                   $ref: '#/components/schemas/User'
      *       400:
      *         description: Invalid input data
      *       401:
@@ -276,12 +333,10 @@ export function createUserRouter(dbContext: DatabaseContext) {
      *         description: User not found
      *       409:
      *         description: Username or email already exists
-     *       500:
-     *         description: Server error
      */
     router.put('/me', validateRequest(updateUserSchema), async (req, res, next) => {
         try {
-            const { username, email, password } = req.body;
+            const { username, email, password, first_name, last_name, birth_date } = req.body;
             const userId = req.user!.id;
 
             const existingUser = await dbContext.users.findById(userId);
@@ -305,11 +360,23 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 }
             }
 
+            // Vérifier la date de naissance si fournie
+            let birthDateObj: Date | undefined;
+            if (birth_date) {
+                birthDateObj = new Date(birth_date);
+                if (isNaN(birthDateObj.getTime())) {
+                    throw new ValidationError('Invalid birth date format');
+                }
+            }
+
             const updateData = {
                 ...existingUser,
                 username: username || existingUser.username,
                 email: email || existingUser.email,
-                password: password ? await bcrypt.hash(password, 10) : existingUser.password
+                password: password ? await bcrypt.hash(password, 10) : existingUser.password,
+                first_name: first_name || existingUser.first_name,
+                last_name: last_name || existingUser.last_name,
+                birth_date: birthDateObj || existingUser.birth_date
             };
 
             const updated = await dbContext.users.update(userId, updateData);
@@ -317,7 +384,19 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 throw new DatabaseError('Failed to update user');
             }
 
-            res.json({ message: 'User updated successfully' });
+            // Récupérer l'utilisateur mis à jour
+            const updatedUser = await dbContext.users.findById(userId);
+            if (!updatedUser) {
+                throw new DatabaseError('Failed to retrieve updated user');
+            }
+
+            // Ne pas renvoyer le mot de passe dans la réponse
+            const { password: _, ...userWithoutPassword } = updatedUser;
+
+            res.json({
+                message: 'User updated successfully',
+                data: userWithoutPassword
+            });
         } catch (error) {
             next(error);
         }

@@ -27,16 +27,46 @@ export class UserDao implements IUserDao {
 
     async create(user: User): Promise<User> {
         const result = await this.db.run(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-            [user.username, user.email, user.password]
+            `INSERT INTO users (
+                username, email, password, 
+                first_name, last_name, birth_date,
+                description
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                user.username, 
+                user.email, 
+                user.password,
+                user.first_name,
+                user.last_name,
+                user.birth_date.toISOString().split('T')[0],
+                user.description || null
+            ]
         );
         return { ...user, id: result.lastID };
     }
 
     async update(id: number, user: User): Promise<boolean> {
         const result = await this.db.run(
-            'UPDATE users SET username = ?, email = ?, password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [user.username, user.email, user.password, id]
+            `UPDATE users SET 
+                username = ?, 
+                email = ?, 
+                password = ?,
+                first_name = ?,
+                last_name = ?,
+                birth_date = ?,
+                description = ?,
+                updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?`,
+            [
+                user.username,
+                user.email,
+                user.password,
+                user.first_name,
+                user.last_name,
+                user.birth_date.toISOString().split('T')[0],
+                user.description || null,
+                id
+            ]
         );
         return result.changes > 0;
     }

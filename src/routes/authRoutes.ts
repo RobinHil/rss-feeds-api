@@ -19,6 +19,9 @@ import bcrypt from 'bcrypt';
  *         - username
  *         - email
  *         - password
+ *         - first_name
+ *         - last_name
+ *         - birth_date
  *       properties:
  *         username:
  *           type: string
@@ -35,6 +38,27 @@ import bcrypt from 'bcrypt';
  *           format: password
  *           minLength: 6
  *           description: User's password
+ *         first_name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 50
+ *           pattern: ^[a-zA-ZÀ-ÿ\s-]+$
+ *           description: User's first name
+ *         last_name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 50
+ *           pattern: ^[a-zA-ZÀ-ÿ\s-]+$
+ *           description: User's last name
+ *         birth_date:
+ *           type: string
+ *           format: date
+ *           pattern: ^\d{4}-\d{2}-\d{2}$
+ *           description: User's birth date (YYYY-MM-DD)
+ *         description:
+ *           type: string
+ *           maxLength: 1000
+ *           description: User's profile description
  *     LoginInput:
  *       type: object
  *       required:
@@ -75,6 +99,15 @@ import bcrypt from 'bcrypt';
  *                   type: string
  *                 email:
  *                   type: string
+ *                 first_name:
+ *                   type: string
+ *                 last_name:
+ *                   type: string
+ *                 birth_date:
+ *                   type: string
+ *                   format: date
+ *                 description:
+ *                   type: string
  *             accessToken:
  *               type: string
  *               description: JWT access token
@@ -91,7 +124,7 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
             type: 'string',
             minLength: 3,
             maxLength: 50,
-            pattern: /^[a-zA-Z0-9_-]+$/ // Lettres, chiffres, underscore et tiret uniquement
+            pattern: /^[a-zA-Z0-9_-]+$/
         },
         email: { 
             required: true, 
@@ -104,6 +137,29 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
             type: 'string',
             minLength: 6,
             maxLength: 100
+        },
+        first_name: {
+            required: true,
+            type: 'string',
+            minLength: 1,
+            maxLength: 50,
+            pattern: /^[a-zA-ZÀ-ÿ\s-]+$/
+        },
+        last_name: {
+            required: true,
+            type: 'string',
+            minLength: 1,
+            maxLength: 50,
+            pattern: /^[a-zA-ZÀ-ÿ\s-]+$/
+        },
+        birth_date: {
+            required: true,
+            type: 'string',
+            pattern: /^\d{4}-\d{2}-\d{2}$/
+        },
+        description: {
+            type: 'string',
+            maxLength: 1000
         }
     };
 
@@ -149,7 +205,7 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
      */
     router.post('/register', validateRequest(registerSchema), async (req, res, next) => {
         try {
-            const { username, email, password } = req.body;
+            const { username, email, password, first_name, last_name, birth_date } = req.body;
 
             // Vérifier si l'email existe déjà
             const existingEmail = await dbContext.users.findByEmail(email);
@@ -163,6 +219,12 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
                 throw new ConflictError('Username already exists');
             }
 
+            // Vérifier la date de naissance
+            const birthDate = new Date(birth_date);
+            if (isNaN(birthDate.getTime())) {
+                throw new ValidationError('Invalid birth date format');
+            }
+
             // Hasher le mot de passe
             const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -170,7 +232,10 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
             const newUser = await dbContext.users.create({
                 username,
                 email,
-                password: hashedPassword
+                password: hashedPassword,
+                first_name,
+                last_name,
+                birth_date: birthDate
             });
 
             // Générer les tokens
