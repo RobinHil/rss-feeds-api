@@ -11,6 +11,7 @@ A robust REST API for managing RSS feeds, articles, and user favorites, built wi
 - Full-text search capabilities
 - API key protection
 - Swagger documentation
+- Jest unit tests and code coverage
 
 ## 🛠️ Technology Stack
 
@@ -20,6 +21,7 @@ A robust REST API for managing RSS feeds, articles, and user favorites, built wi
 - SQLite
 - JWT for authentication
 - Swagger/OpenAPI for documentation
+- Jest for testing
 
 ## 🚀 Getting Started
 
@@ -170,6 +172,24 @@ Run the test suite:
 
 ```bash
 npm test
+```
+
+*or*
+
+```bash
+npm run test
+```
+
+Get tests JUnit report:
+
+```bash
+npm run test:junit
+```
+
+Get tests code coverage report:
+
+```bash
+npm run test:coverage
 ```
 
 ## 📦 Database Structure
