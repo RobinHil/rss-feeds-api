@@ -7,7 +7,11 @@
     "init-db": "ts-node src/database/testDb.ts",
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:junit": "jest --reporters=jest-junit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "HILAIRE Robin",
@@ -23,6 +27,7 @@
     "@types/xml2js": "^0.4.14",
     "bcrypt": "^5.1.1",
     "express": "^4.21.2",
+    "jest-junit": "^16.0.0",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
     "npm-check-updates": "^17.1.11",
@@ -35,5 +40,12 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5"
   }
 }

@@ -339,37 +339,44 @@ export function createArticleRouter(dbContext: DatabaseContext) {
             if (isNaN(feedId) || feedId < 1) {
                 throw new ValidationError('Feed ID must be a positive integer');
             }
-
+    
             const feed = await dbContext.rssFeeds.findById(feedId);
             if (!feed) {
                 throw new NotFoundError('RSS feed not found');
             }
-
+    
             // Vérification que l'utilisateur est le propriétaire du flux
             if (feed.user_id !== req.user!.id) {
                 throw new UnauthorizedError('You can only sync your own feeds');
             }
-
+    
             // Vérification de l'URL du flux
             if (!isValidUrl(feed.url)) {
                 throw new ValidationError('Feed URL is invalid');
             }
-
+    
             // Vérification de la dernière synchronisation (sauf si forceSync est true)
             const forceSync = req.body.forceSync === true;
+            
+            // Modifier cette partie pour être plus stricte
             if (!forceSync && feed.last_fetched) {
                 const lastFetch = new Date(feed.last_fetched);
                 const minInterval = 5 * 60 * 1000; // 5 minutes en millisecondes
-                if (Date.now() - lastFetch.getTime() < minInterval) {
+                const timeSinceLastSync = Date.now() - lastFetch.getTime();
+                
+                if (timeSinceLastSync < minInterval) {
+                    // Calculer le temps restant avant la prochaine synchronisation
+                    const remainingTime = Math.ceil((minInterval - timeSinceLastSync) / 1000 / 60);
+                    
                     throw new ValidationError(
-                        'Feed was recently synchronized. Please wait at least 5 minutes between syncs or use forceSync'
+                        `Feed was recently synchronized. Please wait at least ${remainingTime} more minutes between syncs or use forceSync`
                     );
                 }
             }
-
+    
             try {
                 const insertedCount = await rssService.synchronizeFeed(feedId);
-
+    
                 res.json({
                     message: 'Feed synchronized successfully',
                     data: {

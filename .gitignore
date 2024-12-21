@@ -139,3 +139,6 @@ documentation/
 
 # Temporary files & directories
 *tmp
+
+# JUnit reports
+*junit.xml

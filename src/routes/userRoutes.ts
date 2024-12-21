@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { DatabaseContext } from '../config/database';
-import { ValidationError, NotFoundError, ConflictError, DatabaseError, UnauthorizedError } from '../errors/types';
+import { ValidationError, NotFoundError, ConflictError, DatabaseError } from '../errors/types';
 import { validateRequest } from '../middleware/validators';
 import bcrypt from 'bcrypt';
 
@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
  * @swagger
  * tags:
  *   name: Users
- *   description: User management endpoints
+ *   description: User profile management endpoints
  *
  * components:
  *   schemas:
@@ -86,24 +86,6 @@ import bcrypt from 'bcrypt';
  *           type: string
  *           maxLength: 1000
  *           description: New profile description
- *     PaginatedUsersResponse:
- *       type: object
- *       properties:
- *         data:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/User'
- *         pagination:
- *           type: object
- *           properties:
- *             total:
- *               type: integer
- *             page:
- *               type: integer
- *             limit:
- *               type: integer
- *             totalPages:
- *               type: integer
  */
 export function createUserRouter(dbContext: DatabaseContext) {
     const router = Router();
@@ -151,69 +133,6 @@ export function createUserRouter(dbContext: DatabaseContext) {
      * @swagger
      * /users:
      *   get:
-     *     summary: Get all users with pagination
-     *     tags: [Users]
-     *     security:
-     *       - ApiKeyAuth: []
-     *       - BearerAuth: []
-     *     parameters:
-     *       - in: query
-     *         name: page
-     *         schema:
-     *           type: integer
-     *           minimum: 1
-     *           default: 1
-     *         description: Page number
-     *       - in: query
-     *         name: limit
-     *         schema:
-     *           type: integer
-     *           minimum: 1
-     *           maximum: 50
-     *           default: 10
-     *         description: Number of items per page
-     *     responses:
-     *       200:
-     *         description: List of users successfully retrieved
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/PaginatedUsersResponse'
-     *       401:
-     *         description: Unauthorized access
-     *       500:
-     *         description: Server error
-     */
-    router.get('/', async (req, res, next) => {
-        try {
-            const page = Math.max(1, parseInt(req.query.page as string) || 1);
-            const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
-            const offset = (page - 1) * limit;
-
-            const users = await dbContext.users.findAll(limit, offset);
-            const total = await dbContext.users.count();
-
-            res.json({
-                data: users.map(user => {
-                    const { password, ...userWithoutPassword } = user;
-                    return userWithoutPassword;
-                }),
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    totalPages: Math.ceil(total / limit)
-                }
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
-
-    /**
-     * @swagger
-     * /users/me:
-     *   get:
      *     summary: Get current user's profile
      *     tags: [Users]
      *     security:
@@ -233,7 +152,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
      *       500:
      *         description: Server error
      */
-    router.get('/me', async (req, res, next) => {
+    router.get('/', async (req, res, next) => {
         try {
             const user = await dbContext.users.findById(req.user!.id);
             if (!user) {
@@ -249,58 +168,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
 
     /**
      * @swagger
-     * /users/{id}:
-     *   get:
-     *     summary: Get user by ID
-     *     tags: [Users]
-     *     security:
-     *       - ApiKeyAuth: []
-     *       - BearerAuth: []
-     *     parameters:
-     *       - in: path
-     *         name: id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: User ID
-     *     responses:
-     *       200:
-     *         description: User profile
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/User'
-     *       400:
-     *         description: Invalid user ID format
-     *       401:
-     *         description: Unauthorized access
-     *       404:
-     *         description: User not found
-     *       500:
-     *         description: Server error
-     */
-    router.get('/:id', async (req, res, next) => {
-        try {
-            const userId = Number(req.params.id);
-            if (isNaN(userId)) {
-                throw new ValidationError('Invalid user ID format');
-            }
-
-            const user = await dbContext.users.findById(userId);
-            if (!user) {
-                throw new NotFoundError('User not found');
-            }
-
-            const { password, ...userWithoutPassword } = user;
-            res.json(userWithoutPassword);
-        } catch (error) {
-            next(error);
-        }
-    });
-
-    /**
-     * @swagger
-     * /users/me:
+     * /users:
      *   put:
      *     summary: Update current user's profile
      *     tags: [Users]
@@ -334,7 +202,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
      *       409:
      *         description: Username or email already exists
      */
-    router.put('/me', validateRequest(updateUserSchema), async (req, res, next) => {
+    router.put('/', validateRequest(updateUserSchema), async (req, res, next) => {
         try {
             const { username, email, password, first_name, last_name, birth_date } = req.body;
             const userId = req.user!.id;
@@ -404,7 +272,111 @@ export function createUserRouter(dbContext: DatabaseContext) {
 
     /**
      * @swagger
-     * /users/me:
+     * /users:
+     *   patch:
+     *     summary: Partially update current user's profile
+     *     tags: [Users]
+     *     security:
+     *       - ApiKeyAuth: []
+     *       - BearerAuth: []
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/UpdateUserInput'
+     *     responses:
+     *       200:
+     *         description: User profile updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid input data
+     *       401:
+     *         description: Unauthorized access
+     *       404:
+     *         description: User not found
+     *       409:
+     *         description: Username or email already exists
+     */
+    router.patch('/', validateRequest(updateUserSchema), async (req, res, next) => {
+        try {
+            const { username, email, password, first_name, last_name, birth_date, description } = req.body;
+            const userId = req.user!.id;
+
+            const existingUser = await dbContext.users.findById(userId);
+            if (!existingUser) {
+                throw new NotFoundError('User not found');
+            }
+
+            // Vérifier si le nouveau email n'existe pas déjà
+            if (email && email !== existingUser.email) {
+                const existingEmail = await dbContext.users.findByEmail(email);
+                if (existingEmail) {
+                    throw new ConflictError('Email already exists');
+                }
+            }
+
+            // Vérifier si le nouveau username n'existe pas déjà
+            if (username && username !== existingUser.username) {
+                const existingUsername = await dbContext.users.findByUsername(username);
+                if (existingUsername) {
+                    throw new ConflictError('Username already exists');
+                }
+            }
+
+            // Vérifier la date de naissance si fournie
+            let birthDateObj: Date | undefined;
+            if (birth_date) {
+                birthDateObj = new Date(birth_date);
+                if (isNaN(birthDateObj.getTime())) {
+                    throw new ValidationError('Invalid birth date format');
+                }
+            }
+
+            const updateData = {
+                ...existingUser,
+                ...(username && { username }),
+                ...(email && { email }),
+                ...(password && { password: await bcrypt.hash(password, 10) }),
+                ...(first_name && { first_name }),
+                ...(last_name && { last_name }),
+                ...(birthDateObj && { birth_date: birthDateObj }),
+                ...(description !== undefined && { description })
+            };
+
+            const updated = await dbContext.users.update(userId, updateData);
+            if (!updated) {
+                throw new DatabaseError('Failed to update user');
+            }
+
+            // Récupérer l'utilisateur mis à jour
+            const updatedUser = await dbContext.users.findById(userId);
+            if (!updatedUser) {
+                throw new DatabaseError('Failed to retrieve updated user');
+            }
+
+            // Ne pas renvoyer le mot de passe dans la réponse
+            const { password: _, ...userWithoutPassword } = updatedUser;
+
+            res.json({
+                message: 'User updated successfully',
+                data: userWithoutPassword
+            });
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    /**
+     * @swagger
+     * /users:
      *   delete:
      *     summary: Delete current user's account
      *     tags: [Users]
@@ -426,7 +398,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
      *       500:
      *         description: Server error
      */
-    router.delete('/me', async (req, res, next) => {
+    router.delete('/', async (req, res, next) => {
         try {
             const userId = req.user!.id;
 

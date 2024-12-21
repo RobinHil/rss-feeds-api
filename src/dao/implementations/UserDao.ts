@@ -13,18 +13,6 @@ export class UserDao implements IUserDao {
         return await this.db.get<User>('SELECT * FROM users WHERE id = ?', id);
     }
 
-    async findAll(limit?: number, offset?: number): Promise<User[]> {
-        let query = 'SELECT * FROM users';
-        const params: any[] = [];
-
-        if (limit !== undefined && offset !== undefined) {
-            query += ' LIMIT ? OFFSET ?';
-            params.push(limit, offset);
-        }
-
-        return await this.db.all<User[]>(query, params);
-    }
-
     async create(user: User): Promise<User> {
         const result = await this.db.run(
             `INSERT INTO users (
@@ -82,10 +70,5 @@ export class UserDao implements IUserDao {
 
     async findByEmail(email: string): Promise<User | null> {
         return await this.db.get<User>('SELECT * FROM users WHERE email = ?', email);
-    }
-
-    async count(): Promise<number> {
-        const result = await this.db.get<{ count: number }>('SELECT COUNT(*) as count FROM users');
-        return result?.count || 0;
     }
 }

@@ -60,8 +60,16 @@ export class RssFeedDao implements IRssFeedDao {
 
     async update(id: number, feed: RssFeed): Promise<boolean> {
         const result = await this.db.run(
-            'UPDATE rss_feeds SET title = ?, url = ?, description = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
-            [feed.title, feed.url, feed.description, feed.category, id, feed.user_id]
+            'UPDATE rss_feeds SET title = ?, url = ?, description = ?, category = ?, last_fetched = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+            [
+                feed.title, 
+                feed.url, 
+                feed.description, 
+                feed.category, 
+                feed.last_fetched?.toISOString(), 
+                id, 
+                feed.user_id
+            ]
         );
         return result.changes > 0;
     }

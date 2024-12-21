@@ -11,6 +11,7 @@ import { createArticleRouter } from './routes/articleRoutes';
 import { createAuthRouter } from './routes/authRoutes';
 import { createSystemRouter } from './routes/systemRoutes';
 import { createSearchRouter } from './routes/searchRoutes';
+import { createFavoriteRouter } from './routes/favoriteRoutes';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 
@@ -74,6 +75,7 @@ export class Server {
         const authMiddleware = createAuthMiddleware(this.authService);
         this.app.use('/api/users', authMiddleware, createUserRouter(this.dbContext));
         this.app.use('/api/feeds', authMiddleware, createRssFeedRouter(this.dbContext));
+        this.app.use('/api/favorites', authMiddleware, createFavoriteRouter(this.dbContext));
         this.app.use('/api', authMiddleware, createArticleRouter(this.dbContext));
         this.app.use('/api/search', authMiddleware, createSearchRouter(this.dbContext));
         
