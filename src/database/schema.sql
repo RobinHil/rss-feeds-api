@@ -12,14 +12,15 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS rss_feeds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
-    url TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL,
     description TEXT,
     category TEXT,
     last_fetched DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, url)
 );
 
 -- Table des favoris
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS articles (
 
 -- Index pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_rss_feeds_user_id ON rss_feeds(user_id);
+CREATE INDEX IF NOT EXISTS idx_rss_feeds_url_user ON rss_feeds(url, user_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_user_feed ON favorites(user_id, feed_id);
 CREATE INDEX IF NOT EXISTS idx_articles_feed_date ON articles(feed_id, pub_date);
 CREATE INDEX IF NOT EXISTS idx_articles_guid ON articles(guid);

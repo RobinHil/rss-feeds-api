@@ -369,18 +369,18 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
     router.post('/', validateRequest(createFeedSchema), async (req, res, next) => {
         try {
             const { title, url, description, category } = req.body;
-            const userId = req.user?.id; // À implémenter avec l'authentification
-
+            const userId = req.user?.id;
+    
             if (!userId) {
                 throw new UnauthorizedError();
             }
-
-            // Vérifier si l'URL existe déjà
-            const existingFeed = await dbContext.rssFeeds.findByUrl(url);
+    
+            // Vérifier si l'utilisateur a déjà ce flux RSS
+            const existingFeed = await dbContext.rssFeeds.findByUrl(url, userId);
             if (existingFeed) {
-                throw new ConflictError('A feed with this URL already exists');
+                throw new ConflictError('You already have a feed with this URL');
             }
-
+    
             const newFeed = await dbContext.rssFeeds.create({
                 title,
                 url,
@@ -388,14 +388,14 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 category,
                 user_id: userId
             });
-
+    
             res.status(201).json({
                 message: 'RSS feed created successfully',
                 data: newFeed
             });
         } catch (error) {
-            if (error instanceof Error && error.message.includes('SQLITE_ERROR')) {
-                next(new DatabaseError('Database operation failed'));
+            if (error instanceof Error && error.message.includes('SQLITE_CONSTRAINT')) {
+                next(new ConflictError('You already have a feed with this URL'));
                 return;
             }
             next(error);
@@ -448,32 +448,32 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
             if (isNaN(feedId)) {
                 throw new ValidationError('Invalid feed ID format');
             }
-
-            const userId = req.user?.id; // À implémenter avec l'authentification
+    
+            const userId = req.user?.id;
             if (!userId) {
                 throw new UnauthorizedError();
             }
-
+    
             const existingFeed = await dbContext.rssFeeds.findById(feedId);
             if (!existingFeed) {
                 throw new NotFoundError('RSS feed');
             }
-
+    
             // Vérifier que l'utilisateur est le propriétaire du flux
             if (existingFeed.user_id !== userId) {
                 throw new UnauthorizedError('You can only update your own feeds');
             }
-
+    
             const { title, url, description, category } = req.body;
-
-            // Vérifier si la nouvelle URL n'existe pas déjà
+    
+            // Vérifier si la nouvelle URL n'existe pas déjà pour cet utilisateur
             if (url && url !== existingFeed.url) {
-                const feedWithUrl = await dbContext.rssFeeds.findByUrl(url);
+                const feedWithUrl = await dbContext.rssFeeds.findByUrl(url, userId);
                 if (feedWithUrl) {
-                    throw new ConflictError('A feed with this URL already exists');
+                    throw new ConflictError('You already have a feed with this URL');
                 }
             }
-
+    
             const updateData = {
                 ...existingFeed,
                 title: title || existingFeed.title,
@@ -481,12 +481,12 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 description: description !== undefined ? description : existingFeed.description,
                 category: category !== undefined ? category : existingFeed.category
             };
-
+    
             const updated = await dbContext.rssFeeds.update(feedId, updateData);
             if (!updated) {
                 throw new DatabaseError('Failed to update RSS feed');
             }
-
+    
             res.json({
                 message: 'RSS feed updated successfully'
             });
@@ -541,30 +541,31 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
             if (isNaN(feedId)) {
                 throw new ValidationError('Invalid feed ID format');
             }
-
-            const userId = req.user?.id; // À implémenter avec l'authentification
+    
+            const userId = req.user?.id;
             if (!userId) {
                 throw new UnauthorizedError();
             }
-
+    
             const existingFeed = await dbContext.rssFeeds.findById(feedId);
             if (!existingFeed) {
                 throw new NotFoundError('RSS feed');
             }
-
+    
             if (existingFeed.user_id !== userId) {
                 throw new UnauthorizedError('You can only update your own feeds');
             }
-
+    
             const { title, url, description, category } = req.body;
-
+    
+            // Vérifier si la nouvelle URL n'existe pas déjà pour cet utilisateur
             if (url && url !== existingFeed.url) {
-                const feedWithUrl = await dbContext.rssFeeds.findByUrl(url);
+                const feedWithUrl = await dbContext.rssFeeds.findByUrl(url, userId);
                 if (feedWithUrl) {
-                    throw new ConflictError('A feed with this URL already exists');
+                    throw new ConflictError('You already have a feed with this URL');
                 }
             }
-
+    
             const updateData = {
                 ...existingFeed,
                 ...(title && { title }),
@@ -572,12 +573,12 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 ...(description !== undefined && { description }),
                 ...(category !== undefined && { category })
             };
-
+    
             const updated = await dbContext.rssFeeds.update(feedId, updateData);
             if (!updated) {
                 throw new DatabaseError('Failed to update RSS feed');
             }
-
+    
             res.json({
                 message: 'RSS feed updated successfully'
             });

@@ -43,8 +43,11 @@ export class RssFeedDao implements IRssFeedDao {
         return await this.db.all<RssFeed[]>(query, params);
     }
 
-    async findByUrl(url: string): Promise<RssFeed | null> {
-        return await this.db.get<RssFeed>('SELECT * FROM rss_feeds WHERE url = ?', url);
+    async findByUrl(url: string, userId: number): Promise<RssFeed | null> {
+        return await this.db.get<RssFeed>(
+            'SELECT * FROM rss_feeds WHERE url = ? AND user_id = ?',
+            [url, userId]
+        );
     }
 
     async create(feed: RssFeed): Promise<RssFeed> {
@@ -57,8 +60,8 @@ export class RssFeedDao implements IRssFeedDao {
 
     async update(id: number, feed: RssFeed): Promise<boolean> {
         const result = await this.db.run(
-            'UPDATE rss_feeds SET title = ?, url = ?, description = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [feed.title, feed.url, feed.description, feed.category, id]
+            'UPDATE rss_feeds SET title = ?, url = ?, description = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+            [feed.title, feed.url, feed.description, feed.category, id, feed.user_id]
         );
         return result.changes > 0;
     }
