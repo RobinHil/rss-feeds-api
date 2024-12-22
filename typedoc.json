@@ -1,0 +1,30 @@
+{
+  "entryPoints": ["src/**/*.ts"],
+  "out": "docs",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "theme": "default",
+  "name": "RSS Feed API Documentation",
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Models",
+    "Services",
+    "Controllers",
+    "Routes",
+    "Middleware",
+    "Utils",
+    "*"
+  ],
+  "readme": "README.md",
+  "tsconfig": "./tsconfig.json",
+  "navigationLinks": {
+    "GitHub": "https://github.com/RobinHil/api-rest-project",
+    "Swagger": "http://localhost:3000/api/docs"
+  },
+  "sidebarLinks": {
+    "GitHub Repository": "https://github.com/RobinHil/api-rest-project",
+    "API Reference": "http://localhost:3000/api/docs"
+  }
+}

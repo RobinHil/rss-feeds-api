@@ -11,8 +11,8 @@ services:
       JWT_REFRESH_SECRET: your_secure_refresh_secret
       SYSTEM_API_KEY: your_secure_system_api_key
     volumes:
-      - rss_feed_api:/app
+      - rss_feed_api_data:/app/data
     restart: always
 
 volumes:
-  rss_feed_api:
+  rss_feed_api_data:

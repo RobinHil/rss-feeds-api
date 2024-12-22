@@ -14,6 +14,7 @@ import { createSearchRouter } from './routes/searchRoutes';
 import { createFavoriteRouter } from './routes/favoriteRoutes';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
+import path from 'path';
 
 export class Server {
     private app: express.Application;
@@ -35,7 +36,10 @@ export class Server {
         // Root routes - unprotected welcome message
         const welcomeResponse = {
             message: 'Welcome to the RSS Feed API!',
-            documentation: 'Access the API documentation at /api/docs',
+            documentation: {
+                api: '/api/docs',
+                technical: '/docs'
+            },
             version: '1.0.0'
         };
         
@@ -47,15 +51,22 @@ export class Server {
             res.json(welcomeResponse);
         });
         
-        // Swagger UI d'abord, avant tout middleware d'authentification
+        // Documentation statique
+        // TypeDoc documentation
+        this.app.use('/docs', express.static(path.join(__dirname, '../docs')));
+        
+        // Code coverage report
+        this.app.use('/coverage', express.static(path.join(__dirname, '../coverage/lcov-report')));
+        
+        // Swagger UI pour la documentation OpenAPI
         this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
             explorer: true,
             customSiteTitle: "RSS Feed API Documentation"
         }));
 
-        // Puis les middlewares d'authentification pour toutes les autres routes /api
+        // Middleware d'authentification pour les routes /api
+        // (excluant la documentation)
         this.app.use('/api', (req, res, next) => {
-            // Exclure explicitement la route de documentation
             if (req.path.startsWith('/docs')) {
                 return next();
             }
@@ -87,6 +98,10 @@ export class Server {
             try {
                 this.server = this.app.listen(port, () => {
                     console.log(`Server is running on http://localhost:${port}`);
+                    console.log('Documentation available at:');
+                    console.log(`- API Documentation: http://localhost:${port}/api/docs`);
+                    console.log(`- Technical Documentation: http://localhost:${port}/docs`);
+                    console.log(`- Code Coverage Report: http://localhost:${port}/coverage`);
                     resolve(true);
                 });
             } catch (error) {

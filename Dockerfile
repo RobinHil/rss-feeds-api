@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json tsconfig.json jest.config.js ./
+COPY package*.json tsconfig.json jest.config.js typedoc.json README.md ./
 
 RUN npm ci
 
@@ -10,6 +10,7 @@ COPY src/ ./src/
 COPY tests/ ./tests/
 
 RUN npm run build
+RUN npm run docs
 
 RUN mkdir -p /app/dist/database
 RUN cp /app/src/database/schema.sql /app/dist/database/

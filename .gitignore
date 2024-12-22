@@ -136,6 +136,8 @@ documentation/
 
 # Database objects
 *.sqlite
+data/database.sqlite*
+data/
 
 # Temporary files & directories
 *tmp
