@@ -1,0 +1,18 @@
+services:
+  rss_feed_api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      JWT_ACCESS_SECRET: your_secure_access_secret
+      JWT_REFRESH_SECRET: your_secure_refresh_secret
+      SYSTEM_API_KEY: your_secure_system_api_key
+    volumes:
+      - rss_feed_api:/app
+    restart: always
+
+volumes:
+  rss_feed_api:

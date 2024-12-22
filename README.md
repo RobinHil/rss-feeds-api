@@ -30,22 +30,28 @@ A robust REST API for managing RSS feeds, articles, and user favorites, built wi
 - Node.js (v18 or higher)
 - npm or yarn
 
+*or*
+
+- Docker / Docker XC
+
 ### Installation
 
-1. Clone the repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/RobinHil/api-rest-project.git
 cd api-rest-project
 ```
 
-2. Install dependencies:
+#### If running with npm
+
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Configure environment variables (create a `.env` file):
+2. Configure environment variables (create a `.env` file):
 
 ```env
 JWT_ACCESS_SECRET=your-access-secret-key
@@ -53,7 +59,7 @@ JWT_REFRESH_SECRET=your-refresh-secret-key
 SYSTEM_API_KEY=your-secret-system-api-key
 ```
 
-4. Initialize the database:
+3. Initialize the database:
 
 ```bash
 npm run init-db
@@ -72,6 +78,24 @@ npm run dev
 ```bash
 npm run build
 npm start
+```
+
+### Using Docker Compose
+
+1. Update `.env` file or `docker-compose.yml` to set environment variables:
+
+```env
+NODE_ENV=env_mode (development or production)
+PORT=app_port
+JWT_ACCESS_SECRET=your_secure_access_secret
+JWT_REFRESH_SECRET=your_secure_refresh_secret
+SYSTEM_API_KEY=your_secure_system_api_key
+```
+
+2. Build image and run Docker Compose file:
+
+```bash
+docker compose up -d --build
 ```
 
 The server will start on port 3000 by default. Access:
