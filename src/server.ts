@@ -101,7 +101,7 @@ export class Server {
                     console.log('Documentation available at:');
                     console.log(`- API Documentation: http://localhost:${port}/api/docs`);
                     console.log(`- Technical Documentation: http://localhost:${port}/docs`);
-                    console.log(`- Code Coverage Report: http://localhost:${port}/coverage`);
+                    console.log(`- Code Coverage Report (if built): http://localhost:${port}/coverage`);
                     resolve(true);
                 });
             } catch (error) {
