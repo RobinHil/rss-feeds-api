@@ -1,6 +1,13 @@
 import { initializeDatabase } from './database/initDb';
 import { Server } from './server';
 
+/**
+ * Initializes and starts the server.
+ * 
+ * This function initializes the database, creates a new instance of the Server class,
+ * and starts the server on port 3000. If an error occurs during the process, it logs
+ * the error and exits the process.
+ */
 async function startServer() {
     try {
         const db = await initializeDatabase();
@@ -12,4 +19,5 @@ async function startServer() {
     }
 }
 
+/** Entry point of the application. */
 startServer();

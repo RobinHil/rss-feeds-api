@@ -85,7 +85,7 @@ export function createSystemRouter(dbContext: DatabaseContext) {
             
             const result = await rssService.synchronizeAllFeeds();
             
-            // Log les résultats
+            // Log the results
             console.log(`
                 Global sync completed:
                 - Total feeds: ${result.totalFeeds}
@@ -95,7 +95,7 @@ export function createSystemRouter(dbContext: DatabaseContext) {
                 - Duration: ${(result.endTime.getTime() - result.startTime.getTime()) / 1000}s
             `);
 
-            // Si certaines synchronisations ont échoué, on les log
+            // If some syncs failed, log them
             const failedSyncs = result.results.filter(r => r.status === 'error');
             if (failedSyncs.length > 0) {
                 console.error('Failed syncs:', failedSyncs);
@@ -160,7 +160,7 @@ export function createSystemRouter(dbContext: DatabaseContext) {
         try {
             const months = parseInt(req.query.months as string);
             
-            // Validation du paramètre
+            // Parameter validation
             if (isNaN(months) || months < 1) {
                 throw new ValidationError('months parameter must be a positive integer');
             }

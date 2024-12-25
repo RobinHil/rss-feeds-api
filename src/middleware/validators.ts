@@ -1,6 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../errors/types';
 
+/**
+ * Represents a validation rule for a field in a request.
+ * 
+ * @property {boolean} required - Indicates if the field is required.
+ * @property {string} type - The type of the field.
+ * @property {number} minLength - The minimum length of the field.
+ * @property {number} maxLength - The maximum length of the field.
+ * @property {RegExp} pattern - The pattern the field must match.
+ */
 interface ValidationRule {
     required?: boolean;
     type?: string;
@@ -9,10 +18,21 @@ interface ValidationRule {
     pattern?: RegExp;
 }
 
+/**
+ * Represents a validation schema for a request.
+ * 
+ * @property {ValidationRule} key - The validation rule for a field.
+ */
 interface ValidationSchema {
     [key: string]: ValidationRule;
 }
 
+/**
+ * Middleware function to validate a request based on a schema.
+ * 
+ * @param {ValidationSchema} schema - The schema to validate the request against.
+ * @returns {(req: Request, res: Response, next: NextFunction) => void} - A middleware function that validates the request.
+ */
 export function validateRequest(schema: ValidationSchema) {
     return (req: Request, res: Response, next: NextFunction) => {
         const errors: string[] = [];
@@ -53,6 +73,12 @@ export function validateRequest(schema: ValidationSchema) {
     };
 }
 
+/**
+ * Checks if a string is a valid URL.
+ * 
+ * @param {string} str - The string to check.
+ * @returns {boolean} - True if the string is a valid URL, false otherwise.
+ */
 export function isValidUrl(str: string): boolean {
     try {
         new URL(str);
@@ -62,6 +88,12 @@ export function isValidUrl(str: string): boolean {
     }
 }
 
+/**
+ * Checks if a string is a valid ISO date.
+ * 
+ * @param {string} str - The string to check.
+ * @returns {boolean} - True if the string is a valid ISO date, false otherwise.
+ */
 export function isValidISODate(str: string): boolean {
     if (!/\d{4}-\d{2}-\d{2}T?\d{2}:\d{2}:\d{2}/.test(str)) {
         return false;

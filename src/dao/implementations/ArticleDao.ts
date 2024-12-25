@@ -3,6 +3,10 @@ import { Article } from '../../models/Article';
 import { IArticleDao } from '../interfaces/IArticleDao';
 import { normalizeSearchTerm } from '../../utils/searchHelpers';
 
+/**
+ * Represents the implementation of the Article Data Access Object (DAO).
+ * This class provides methods for CRUD operations and other functionalities related to articles.
+ */
 export class ArticleDao implements IArticleDao {
     private db: Database;
 

@@ -207,28 +207,28 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
         try {
             const { username, email, password, first_name, last_name, birth_date } = req.body;
 
-            // Vérifier si l'email existe déjà
+            /** Check if the email already exists */
             const existingEmail = await dbContext.users.findByEmail(email);
             if (existingEmail) {
                 throw new ConflictError('Email already exists');
             }
 
-            // Vérifier si le username existe déjà
+            /** Check if the username already exists */
             const existingUsername = await dbContext.users.findByUsername(username);
             if (existingUsername) {
                 throw new ConflictError('Username already exists');
             }
 
-            // Vérifier la date de naissance
+            /** Validate the birth date */
             const birthDate = new Date(birth_date);
             if (isNaN(birthDate.getTime())) {
                 throw new ValidationError('Invalid birth date format');
             }
 
-            // Hasher le mot de passe
+            /** Hash the password */
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // Créer l'utilisateur
+            /** Create the user */
             const newUser = await dbContext.users.create({
                 username,
                 email,
@@ -238,11 +238,11 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
                 birth_date: birthDate
             });
 
-            // Générer les tokens
+            /** Generate the tokens */
             const accessToken = authService.generateAccessToken(newUser.id!);
             const refreshToken = authService.generateRefreshToken(newUser.id!);
 
-            // Ne pas renvoyer le mot de passe dans la réponse
+            /** Do not return the password in the response */
             const { password: _, ...userWithoutPassword } = newUser;
 
             res.status(201).json({
@@ -298,7 +298,7 @@ export function createAuthRouter(dbContext: DatabaseContext, authService: AuthSe
             const accessToken = authService.generateAccessToken(user.id!);
             const refreshToken = authService.generateRefreshToken(user.id!);
 
-            // Ne pas renvoyer le mot de passe dans la réponse
+            /** Do not return the password in the response */
             const { password: _, ...userWithoutPassword } = user;
 
             res.json({

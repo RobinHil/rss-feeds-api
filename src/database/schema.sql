@@ -1,4 +1,4 @@
--- Table des utilisateurs
+-- Users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table des flux RSS
+-- RSS Feeds table
 CREATE TABLE IF NOT EXISTS rss_feeds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS rss_feeds (
     UNIQUE(user_id, url)
 );
 
--- Table des favoris
+-- Favorites table
 CREATE TABLE IF NOT EXISTS favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS favorites (
     UNIQUE(user_id, feed_id)
 );
 
--- Table des articles RSS
+-- RSS Articles table
 CREATE TABLE IF NOT EXISTS articles (
     link TEXT PRIMARY KEY,
     feed_id INTEGER NOT NULL,

@@ -3,6 +3,10 @@ import { RssFeed } from '../../models/RssFeed';
 import { IRssFeedDao } from '../interfaces/IRssFeedDao';
 import { normalizeSearchTerm } from '../../utils/searchHelpers';
 
+/**
+ * Represents the implementation of the RSS Feed Data Access Object (DAO).
+ * This class provides methods for CRUD operations and other functionalities related to RSS feeds.
+ */
 export class RssFeedDao implements IRssFeedDao {
     private db: Database;
 

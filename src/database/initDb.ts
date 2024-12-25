@@ -4,6 +4,12 @@ import { readFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+/**
+ * Initializes the database by creating the data directory if it doesn't exist, 
+ * opening the database file, and executing the schema to create tables.
+ * 
+ * @returns {Promise<any>} A promise that resolves to the database connection.
+ */
 export async function initializeDatabase() {
     const dataDir = join(__dirname, '..', '..', 'data');
     if (!existsSync(dataDir)) {

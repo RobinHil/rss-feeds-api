@@ -2,6 +2,10 @@ import { Database } from 'sqlite';
 import { User } from '../../models/User';
 import { IUserDao } from '../interfaces/IUserDao';
 
+/**
+ * Represents the implementation of the User Data Access Object (DAO).
+ * This class provides methods for CRUD operations and other functionalities related to users.
+ */
 export class UserDao implements IUserDao {
     private db: Database;
 

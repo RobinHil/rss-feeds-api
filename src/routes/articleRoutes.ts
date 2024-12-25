@@ -79,7 +79,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
     const router = Router();
     const rssService = new RssService(dbContext);
 
-    // Schémas de validation
+    /** Validation schemas */
     const syncFeedSchema = {
         forceSync: { 
             type: 'boolean',
@@ -87,11 +87,11 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         }
     };
 
-    // Validation des paramètres de requête pour les articles
+    /** Request parameters validation for articles */
     const validateQueryParams = (req: any) => {
         const errors: string[] = [];
         
-        // Validation de la pagination
+        /** Pagination validation */
         if (req.query.page && (isNaN(Number(req.query.page)) || Number(req.query.page) < 1)) {
             errors.push('Page number must be a positive integer');
         }
@@ -99,7 +99,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
             errors.push('Limit must be a positive integer');
         }
 
-        // Validation des dates
+        /** Dates validation */
         if (req.query.startDate && !isValidISODate(req.query.startDate)) {
             errors.push('Start date must be a valid ISO date string');
         }
@@ -114,7 +114,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
             }
         }
 
-        // Validation de la requête de recherche
+        /** Search query validation */
         if (req.query.q && (typeof req.query.q !== 'string' || req.query.q.length < 2)) {
             errors.push('Search query must be at least 2 characters long');
         }
@@ -184,27 +184,27 @@ export function createArticleRouter(dbContext: DatabaseContext) {
      */
     router.get('/feeds/:feedId/articles', async (req, res, next) => {
         try {
-            // Validation de l'ID du flux
+            /** Feed ID validation */
             const feedId = Number(req.params.feedId);
             if (isNaN(feedId) || feedId < 1) {
                 throw new ValidationError('Feed ID must be a positive integer');
             }
 
-            // Validation des paramètres de requête
+            /** Request parameters validation */
             validateQueryParams(req);
 
-            // Paramètres de pagination avec valeurs par défaut et limites
+            /** Pagination parameters with default values and limits */
             const page = Math.max(1, parseInt(req.query.page as string) || 1);
             const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
             const offset = (page - 1) * limit;
 
-            // Vérification du flux
+            /** Feed verification */
             const feed = await dbContext.rssFeeds.findById(feedId);
             if (!feed) {
                 throw new NotFoundError('RSS feed not found');
             }
 
-            // Vérification des permissions (si le flux est privé)
+            /** Permissions verification (if the feed is private) */
             if (feed.user_id && feed.user_id !== req.user?.id) {
                 throw new UnauthorizedError('You do not have access to this feed');
             }
@@ -345,27 +345,27 @@ export function createArticleRouter(dbContext: DatabaseContext) {
                 throw new NotFoundError('RSS feed not found');
             }
     
-            // Vérification que l'utilisateur est le propriétaire du flux
+            /** User ownership verification */
             if (feed.user_id !== req.user!.id) {
                 throw new UnauthorizedError('You can only sync your own feeds');
             }
     
-            // Vérification de l'URL du flux
+            /** Feed URL verification */
             if (!isValidUrl(feed.url)) {
                 throw new ValidationError('Feed URL is invalid');
             }
     
-            // Vérification de la dernière synchronisation (sauf si forceSync est true)
+            /** Last synchronization verification (unless forceSync is true) */
             const forceSync = req.body.forceSync === true;
             
-            // Modifier cette partie pour être plus stricte
+            /** Modify this part to be more strict */
             if (!forceSync && feed.last_fetched) {
                 const lastFetch = new Date(feed.last_fetched);
-                const minInterval = 5 * 60 * 1000; // 5 minutes en millisecondes
+                const minInterval = 5 * 60 * 1000; /** 5 minutes in milliseconds */
                 const timeSinceLastSync = Date.now() - lastFetch.getTime();
                 
                 if (timeSinceLastSync < minInterval) {
-                    // Calculer le temps restant avant la prochaine synchronisation
+                    /** Calculate the remaining time before the next synchronization */
                     const remainingTime = Math.ceil((minInterval - timeSinceLastSync) / 1000 / 60);
                     
                     throw new ValidationError(
@@ -446,7 +446,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
         try {
             const link = decodeURIComponent(req.params.link);
             
-            // Validation du lien
+            /** Link validation */
             if (!isValidUrl(link)) {
                 throw new ValidationError('Invalid article URL');
             }
@@ -457,7 +457,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
                     throw new NotFoundError('Article not found');
                 }
 
-                // Vérification des permissions du flux associé
+                /** Associated feed permissions verification */
                 const feed = await dbContext.rssFeeds.findById(article.feed_id);
                 if (!feed) {
                     throw new NotFoundError('Associated RSS feed not found');
@@ -558,7 +558,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
      */
     router.get('/articles', async (req, res, next) => {
         try {
-            // Validation des paramètres de requête
+            /** Request parameters validation */
             validateQueryParams(req);
 
             const userId = req.user!.id;
@@ -566,7 +566,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
             const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
             const offset = (page - 1) * limit;
 
-            // Construire les filtres
+            /** Build filters */
             const filters: any = {};
 
             if (req.query.feedId) {
@@ -575,7 +575,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
                     throw new ValidationError('Invalid feed ID');
                 }
                 
-                // Vérifier que l'utilisateur a accès à ce flux
+                /** Check if the user has access to this feed */
                 const feed = await dbContext.rssFeeds.findById(feedId);
                 if (!feed || feed.user_id !== userId) {
                     throw new UnauthorizedError('You do not have access to this feed');
@@ -617,7 +617,7 @@ export function createArticleRouter(dbContext: DatabaseContext) {
                 );
                 const total = await dbContext.articles.countByUserId(userId, filters);
 
-                // Obtenir les informations des flux pour chaque article
+                /** Get feed information for each article */
                 const feedIds = [...new Set(articles.map(article => article.feed_id))];
                 const feeds = await Promise.all(
                     feedIds.map(id => dbContext.rssFeeds.findById(id))

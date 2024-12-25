@@ -126,7 +126,7 @@ export function createFavoriteRouter(dbContext: DatabaseContext) {
 
             const userId = req.user!.id;
 
-            // On récupère les favoris avec les informations des flux RSS
+            /** Retrieve favorites with RSS feed information */
             const favorites = await dbContext.favorites.findByUserIdWithFeedInfo(userId, limit, offset);
             const total = await dbContext.favorites.countByUserId(userId);
 
@@ -185,13 +185,13 @@ export function createFavoriteRouter(dbContext: DatabaseContext) {
             const userId = req.user!.id;
             const { feed_id } = req.body;
 
-            // Vérifier si le flux RSS existe
+            /** Check if the RSS feed exists */
             const feed = await dbContext.rssFeeds.findById(feed_id);
             if (!feed) {
                 throw new NotFoundError('RSS feed not found');
             }
 
-            // Vérifier si le favori existe déjà
+            /** Check if the favorite already exists */
             const existingFavorite = await dbContext.favorites.findByUserAndFeed(userId, feed_id);
             if (existingFavorite) {
                 throw new ConflictError('Feed is already in favorites');

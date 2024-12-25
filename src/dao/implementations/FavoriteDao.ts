@@ -5,6 +5,10 @@ import { RssFeed } from '../../models/RssFeed';
 import { IFavoriteDao } from '../interfaces/IFavoriteDao';
 import { normalizeSearchTerm } from '../../utils/searchHelpers';
 
+/**
+ * Represents the implementation of the Favorite Data Access Object (DAO).
+ * This class provides methods for CRUD operations and other functionalities related to favorites.
+ */
 export class FavoriteDao implements IFavoriteDao {
     private db: Database;
 

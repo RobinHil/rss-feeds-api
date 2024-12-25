@@ -212,7 +212,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 throw new NotFoundError('User not found');
             }
 
-            // Vérifier si le nouveau email n'existe pas déjà
+            /** Check if the new email already exists */
             if (email && email !== existingUser.email) {
                 const existingEmail = await dbContext.users.findByEmail(email);
                 if (existingEmail) {
@@ -220,7 +220,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 }
             }
 
-            // Vérifier si le nouveau username n'existe pas déjà
+            /** Check if the new username already exists */
             if (username && username !== existingUser.username) {
                 const existingUsername = await dbContext.users.findByUsername(username);
                 if (existingUsername) {
@@ -228,7 +228,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 }
             }
 
-            // Vérifier la date de naissance si fournie
+            /** Check the birth date if provided */
             let birthDateObj: Date | undefined;
             if (birth_date) {
                 birthDateObj = new Date(birth_date);
@@ -252,13 +252,13 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 throw new DatabaseError('Failed to update user');
             }
 
-            // Récupérer l'utilisateur mis à jour
+            /** Get the updated user */
             const updatedUser = await dbContext.users.findById(userId);
             if (!updatedUser) {
                 throw new DatabaseError('Failed to retrieve updated user');
             }
 
-            // Ne pas renvoyer le mot de passe dans la réponse
+            /** Do not return the password in the response */
             const { password: _, ...userWithoutPassword } = updatedUser;
 
             res.json({
@@ -315,7 +315,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 throw new NotFoundError('User not found');
             }
 
-            // Vérifier si le nouveau email n'existe pas déjà
+            /** Check if the new email already exists */
             if (email && email !== existingUser.email) {
                 const existingEmail = await dbContext.users.findByEmail(email);
                 if (existingEmail) {
@@ -323,7 +323,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 }
             }
 
-            // Vérifier si le nouveau username n'existe pas déjà
+            /** Check if the new username already exists */
             if (username && username !== existingUser.username) {
                 const existingUsername = await dbContext.users.findByUsername(username);
                 if (existingUsername) {
@@ -331,7 +331,7 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 }
             }
 
-            // Vérifier la date de naissance si fournie
+            /** Check the birth date if provided */
             let birthDateObj: Date | undefined;
             if (birth_date) {
                 birthDateObj = new Date(birth_date);
@@ -356,13 +356,13 @@ export function createUserRouter(dbContext: DatabaseContext) {
                 throw new DatabaseError('Failed to update user');
             }
 
-            // Récupérer l'utilisateur mis à jour
+            /** Get the updated user */
             const updatedUser = await dbContext.users.findById(userId);
             if (!updatedUser) {
                 throw new DatabaseError('Failed to retrieve updated user');
             }
 
-            // Ne pas renvoyer le mot de passe dans la réponse
+            /** Do not return the password in the response */
             const { password: _, ...userWithoutPassword } = updatedUser;
 
             res.json({

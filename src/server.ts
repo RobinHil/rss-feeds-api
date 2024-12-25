@@ -16,12 +16,19 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import path from 'path';
 
+/**
+ * Main server class that handles Express application setup and lifecycle
+ */
 export class Server {
     private app: express.Application;
     private dbContext: DatabaseContext;
     private authService: AuthService;
     private server: HttpServer | null = null;
 
+    /**
+     * Creates a new Server instance
+     * @param db - SQLite database instance
+     */
     constructor(db: Database) {
         this.app = express();
         this.dbContext = initializeDaos(db);
@@ -30,10 +37,18 @@ export class Server {
         this.configureRoutes();
     }
 
+    /**
+     * Configures Express middleware including:
+     * - JSON body parser
+     * - Welcome routes
+     * - Static documentation route
+     * - Swagger UI
+     * - API key validation
+     */
     private configureMiddleware() {
         this.app.use(express.json());
 
-        // Root routes - unprotected welcome message
+        /** Root routes - unprotected welcome message */
         const welcomeResponse = {
             message: 'Welcome to the RSS Feed API!',
             documentation: {
@@ -42,7 +57,7 @@ export class Server {
             },
             version: '1.0.0'
         };
-        
+
         this.app.get('/', (req, res) => {
             res.json(welcomeResponse);
         });
@@ -50,22 +65,20 @@ export class Server {
         this.app.get('/api', (req, res) => {
             res.json(welcomeResponse);
         });
-        
-        // Documentation statique
-        // TypeDoc documentation
+
+        /** TypeDoc documentation */
         this.app.use('/docs', express.static(path.join(__dirname, '../docs')));
-        
-        // Code coverage report
+
+        /** Code coverage report */
         this.app.use('/coverage', express.static(path.join(__dirname, '../coverage/lcov-report')));
-        
-        // Swagger UI pour la documentation OpenAPI
+
+        /** Swagger UI for OpenAPI documentation */
         this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
             explorer: true,
             customSiteTitle: "RSS Feed API Documentation"
         }));
 
-        // Middleware d'authentification pour les routes /api
-        // (excluant la documentation)
+        /** Authentication middleware for /api routes (excluding documentation) */
         this.app.use('/api', (req, res, next) => {
             if (req.path.startsWith('/docs')) {
                 return next();
@@ -74,25 +87,36 @@ export class Server {
         });
     }
 
+    /**
+     * Configures API routes with appropriate middleware:
+     * - System routes (API key only)
+     * - Auth routes (API key only) 
+     * - Protected routes (API key + JWT)
+     */
     private configureRoutes() {
-        // Routes système (nécessitent uniquement l'API key)
+        /** System routes (require API key only) */
         const systemAuthMiddleware = createSystemAuthMiddleware();
         this.app.use('/api/system', systemAuthMiddleware, createSystemRouter(this.dbContext));
 
-        // Routes d'authentification (nécessitent uniquement l'API key)
+        /** Auth routes (require API key only) */
         this.app.use('/api/auth', systemAuthMiddleware, createAuthRouter(this.dbContext, this.authService));
-        
-        // Routes protégées (nécessitent API key + JWT)
+
+        /** Protected routes (require API key + JWT) */
         const authMiddleware = createAuthMiddleware(this.authService);
         this.app.use('/api/users', authMiddleware, createUserRouter(this.dbContext));
         this.app.use('/api/feeds', authMiddleware, createRssFeedRouter(this.dbContext));
         this.app.use('/api/favorites', authMiddleware, createFavoriteRouter(this.dbContext));
         this.app.use('/api', authMiddleware, createArticleRouter(this.dbContext));
         this.app.use('/api/search', authMiddleware, createSearchRouter(this.dbContext));
-        
+
         this.app.use(errorHandler);
     }
 
+    /**
+     * Starts the HTTP server
+     * @param port - Port number to listen on
+     * @returns Promise that resolves to true when server starts successfully
+     */
     public start(port: number): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
@@ -110,6 +134,10 @@ export class Server {
         });
     }
 
+    /**
+     * Stops the HTTP server gracefully
+     * @returns Promise that resolves when server has stopped
+     */
     public stop(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.server) {

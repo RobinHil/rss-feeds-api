@@ -36,7 +36,7 @@ import { ValidationError } from '../errors/types';
 export function createSearchRouter(dbContext: DatabaseContext) {
     const router = Router();
 
-    // Validation du terme de recherche
+    /** Search term validation */
     const validateSearchTerm = (term?: string) => {
         if (!term || term.length < 2) {
             throw new ValidationError('Search term must be at least 2 characters long');

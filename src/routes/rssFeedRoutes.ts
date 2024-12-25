@@ -104,7 +104,6 @@ import { validateRequest } from '../middleware/validators';
 export function createRssFeedRouter(dbContext: DatabaseContext) {
     const router = Router();
 
-    // Schémas de validation
     const createFeedSchema = {
         title: { 
             required: true, 
@@ -115,7 +114,7 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
         url: { 
             required: true, 
             type: 'string',
-            pattern: /^https?:\/\/.+/i, // URL doit commencer par http:// ou https://
+            pattern: /^https?:\/\/.+/i,
             maxLength: 2048
         },
         description: {
@@ -195,7 +194,7 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
             const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
             const offset = (page - 1) * limit;
             
-            // Filtrage optionnel par catégorie
+            /** Optional filtering by category */
             const category = req.query.category as string;
             
             const feeds = await dbContext.rssFeeds.findAll(limit, offset, category);
@@ -375,7 +374,7 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 throw new UnauthorizedError();
             }
     
-            // Vérifier si l'utilisateur a déjà ce flux RSS
+            /** Check if the user already has this RSS feed */
             const existingFeed = await dbContext.rssFeeds.findByUrl(url, userId);
             if (existingFeed) {
                 throw new ConflictError('You already have a feed with this URL');
@@ -459,14 +458,14 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 throw new NotFoundError('RSS feed');
             }
     
-            // Vérifier que l'utilisateur est le propriétaire du flux
+            /** Check that the user is the owner of the feed */
             if (existingFeed.user_id !== userId) {
                 throw new UnauthorizedError('You can only update your own feeds');
             }
     
             const { title, url, description, category } = req.body;
     
-            // Vérifier si la nouvelle URL n'existe pas déjà pour cet utilisateur
+            /** Check if the new URL does not already exist for this user */
             if (url && url !== existingFeed.url) {
                 const feedWithUrl = await dbContext.rssFeeds.findByUrl(url, userId);
                 if (feedWithUrl) {
@@ -558,7 +557,7 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
     
             const { title, url, description, category } = req.body;
     
-            // Vérifier si la nouvelle URL n'existe pas déjà pour cet utilisateur
+            /** Check if the new URL does not already exist for this user */
             if (url && url !== existingFeed.url) {
                 const feedWithUrl = await dbContext.rssFeeds.findByUrl(url, userId);
                 if (feedWithUrl) {
@@ -626,7 +625,7 @@ export function createRssFeedRouter(dbContext: DatabaseContext) {
                 throw new ValidationError('Invalid feed ID format');
             }
 
-            const userId = req.user?.id; // À implémenter avec l'authentification
+            const userId = req.user?.id;
             if (!userId) {
                 throw new UnauthorizedError();
             }

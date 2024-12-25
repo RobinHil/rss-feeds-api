@@ -1,5 +1,18 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 
+/**
+ * Configuration for Swagger documentation.
+ * 
+ * @property {object} definition - The definition object for Swagger.
+ * @property {string} definition.openapi - The version of OpenAPI.
+ * @property {object} definition.info - The information object for the API.
+ * @property {object[]} definition.servers - The servers where the API is hosted.
+ * @property {object} definition.components.securitySchemes - The security schemes for the API.
+ * @property {object} definition.components.securitySchemes.ApiKeyAuth - The API key security scheme.
+ * @property {object} definition.components.securitySchemes.BearerAuth - The bearer token security scheme.
+ * @property {object[]} definition.security - The security requirements for the API.
+ * @property {string[]} apis - The paths to the API routes.
+ */
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -38,4 +51,9 @@ const options = {
     apis: ['./src/routes/*.ts'],
 };
 
+/**
+ * The Swagger specification for the API.
+ * 
+ * @type {object}
+ */
 export const swaggerSpec = swaggerJsdoc(options);
