@@ -1,3 +1,5 @@
+*Robin HILAIRE - TP2 FA*
+
 # 📰 RSS Feed API
 
 A robust REST API for managing RSS feeds, articles, and user favorites, built with Node.js, Express, and SQLite.
@@ -86,7 +88,6 @@ npm start
 
 ```env
 NODE_ENV=env_mode (development or production)
-PORT=app_port
 JWT_ACCESS_SECRET=your_secure_access_secret
 JWT_REFRESH_SECRET=your_secure_refresh_secret
 SYSTEM_API_KEY=your_secure_system_api_key
