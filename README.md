@@ -237,7 +237,3 @@ Main tables:
 - API key requirement
 - Input validation
 - SQL injection protection
-
-## 👥 Authors
-
-- HILAIRE Robin
