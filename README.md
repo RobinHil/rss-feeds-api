@@ -34,7 +34,7 @@ A robust REST API for managing RSS feeds, articles, and user favorites, built wi
 
 *or*
 
-- Docker / Docker XC
+- Docker / Docker Compose
 
 ### Installation
 
