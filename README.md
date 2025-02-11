@@ -1,5 +1,3 @@
-*Robin HILAIRE - TP2 FA*
-
 # 📰 RSS Feed API
 
 A robust REST API for managing RSS feeds, articles, and user favorites, built with Node.js, Express, and SQLite.
