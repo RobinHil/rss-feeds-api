@@ -1,4 +1,4 @@
-# 📰 RSS Feed API
+# 📰 RSS Feeds API
 
 A robust REST API for managing RSS feeds, articles, and user favorites, built with Node.js, Express, and SQLite.
 
