@@ -82,7 +82,7 @@ npm run build
 npm start
 ```
 
-### Using Docker Compose
+### Using Docker Compose
 
 1. Update `.env` file or `docker-compose.yml` to set environment variables:
 
